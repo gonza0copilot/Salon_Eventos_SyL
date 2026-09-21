@@ -1,8 +1,11 @@
 .card{
     display: flex;
     flex-direction: column;
-    border: 1px solid black;
+    border: 5px solid black;
 
+}
+.card-body{
+    background-color: darkred;
 }
 body{
     background-color: bisque;
