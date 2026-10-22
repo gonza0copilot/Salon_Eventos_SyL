@@ -91,3 +91,106 @@ function toggleCateringMenu() {
     document.getElementById('opcion-menu').value = ""; // Resetea la selección si lo desmarca
   }
 }
+
+
+
+const salones = [
+  {
+    id: 1,
+    nombre: "Salón Imperial",
+    capacidad: 350,
+    url: "SALON1.html",
+    descripcion: "Espacio elegante para grandes eventos y casamientos."
+  },
+  {
+    id: 2,
+    nombre: "Casita de fiesta",
+    capacidad: 70,
+    url: "SALON2.html",
+    descripcion: "Espacio con máquinas arcade, ping pong y pool para cumpleaños."
+  },
+  {
+    id: 3,
+    nombre: "Salón Quincho",
+    capacidad: 150,
+    url: "SALON3.html",
+    descripcion: "Quincho campestre ideal para asados y eventos al aire libre."
+  }
+];
+
+
+
+
+
+// filtro de busqueda
+function realizarBusqueda() {
+  const input = document.getElementById('input-buscar').value.trim();
+  const contenedor = document.getElementById('resultados-busqueda');
+  
+  if (!contenedor) return;
+
+  // Limpiar resultados anteriores
+  contenedor.innerHTML = '';
+
+  if (!input) {
+    contenedor.innerHTML = '<div class="column is-12"><p class="has-text-warning">Por favor, ingresá un nombre o número de personas.</p></div>';
+    return;
+  }
+
+  let resultados = [];
+  const esNumero = !isNaN(input) && input !== '';
+
+  if (esNumero) {
+    const cantidadInvitados = parseInt(input, 10);
+    // Filtrar salones con capacidad mayor o igual a la cantidad requerida
+    resultados = salones.filter(salon => salon.capacidad >= cantidadInvitados);
+  } else {
+    // Filtrar por coincidencia en el nombre (sin importar mayúsculas/minúsculas)
+    resultados = salones.filter(salon => 
+      salon.nombre.toLowerCase().includes(input.toLowerCase())
+    );
+  }
+
+  // Renderizar resultados
+  if (resultados.length === 0) {
+    contenedor.innerHTML = `
+      <div class="column is-12">
+        <div class="notification is-warning is-light">
+          No se encontraron salones que coincidan con la búsqueda.
+        </div>
+      </div>`;
+    return;
+  }
+
+  resultados.forEach(salon => {
+    const cardHTML = `
+      <div class="column is-4">
+        <div class="card">
+          <div class="card-content">
+            <p class="title is-5">${salon.nombre}</p>
+            <p class="subtitle is-6 text-muted">
+              <i class="fas fa-users mr-1"></i> Capacidad: Hasta ${salon.capacidad} personas
+            </p>
+            <p class="is-size-7 mb-4">${salon.descripcion}</p>
+            <a href="${salon.url}" class="button is-warning is-small is-fullwidth has-text-weight-bold">
+              Ver Salón
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+    contenedor.innerHTML += cardHTML;
+  });
+}
+
+// Opcional: Permitir presionar "Enter" en el input para buscar
+document.addEventListener('DOMContentLoaded', () => {
+  const inputBuscar = document.getElementById('input-buscar');
+  if (inputBuscar) {
+    inputBuscar.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        realizarBusqueda();
+      }
+    });
+  }
+});
