@@ -6,49 +6,175 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GestionManagement</title>
 </head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+<!-- FontAwesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="styles.css">
 
 <body>
-    
-    <h1>GestionManagement</h1>
-    <p>tu sitio de gestion para eventos</p>
+    <!-- ================= SECCIÓN 1: LOGIN / REGISTRO ================= -->
+  <section id="login-section" class="hero is-dark is-fullheight">
+    <div class="hero-body">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-5-tablet is-4-desktop">
+            
+            <div class="box">
+              <h2 class="title is-4 has-text-centered mb-4">Salon_Eventos_SyL</h2>
+              
+              <!-- Pestañas para cambiar entre Iniciar Sesión y Registrarse -->
+              <div class="tabs is-boxed is-centered mb-4" id="auth-tabs">
+                <ul>
+                  <li class="is-active" data-tab="login"><a>Ingresar</a></li>
+                  <li data-tab="register"><a>Crear Cuenta</a></li>
+                </ul>
+              </div>
 
-    <div class="group-card">
-        <div class="card" style="width: 20rem;">
-            <img src="https://picsum.photos/600/400" class="card-img-top" alt="Foto de prueba">
-            <div class="card-body">
-                <h5 class="card-title">Card title</h5>
-                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
-                    card’s
-                    content.</p>
-                <a href="#" class="btn btn-primary">Go somewhere</a>
+              <!-- Formulario de Login -->
+              <form id="form-login" onsubmit="manejarLogin(event)">
+                <div class="field">
+                  <label class="label">Email o Usuario</label>
+                  <div class="control has-icons-left">
+                    <input class="input" type="text" id="login-email" placeholder="usuario@email.com o admin" required>
+                    <span class="icon is-small is-left"><i class="fas fa-envelope"></i></span>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="label">Contraseña</label>
+                  <div class="control has-icons-left">
+                    <input class="input" type="password" id="login-password" placeholder="Tu contraseña" required>
+                    <span class="icon is-small is-left"><i class="fas fa-lock"></i></span>
+                  </div>
+                  <p class="help is-info">Tip: Usa la contraseña <strong>admin123</strong> para ingresar como Administrador.</p>
+                </div>
+
+                <div class="field mt-4">
+                  <button type="submit" class="button is-warning is-fullwidth has-text-weight-bold">Iniciar Sesión</button>
+                </div>
+              </form>
+
+              <!-- Formulario de Registro (Oculto por defecto) -->
+              <form id="form-register" class="is-hidden" onsubmit="manejarRegistro(event)">
+                <div class="field">
+                  <label class="label">Nombre Completo</label>
+                  <div class="control has-icons-left">
+                    <input class="input" type="text" placeholder="Juan Pérez" required>
+                    <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="label">Correo Electrónico</label>
+                  <div class="control has-icons-left">
+                    <input class="input" type="email" placeholder="correo@email.com" required>
+                    <span class="icon is-small is-left"><i class="fas fa-envelope"></i></span>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="label">Contraseña</label>
+                  <div class="control has-icons-left">
+                    <input class="input" type="password" placeholder="••••••••" required>
+                    <span class="icon is-small is-left"><i class="fas fa-lock"></i></span>
+                  </div>
+                </div>
+
+                <div class="field mt-4">
+                  <button type="submit" class="button is-success is-fullwidth has-text-weight-bold">Registrarse</button>
+                </div>
+              </form>
+
             </div>
-        </div>
-        
 
-        <div class="card" style="width: 20rem;">
-            <img src="https://picsum.photos/600/400" class="card-img-top" alt="Foto de prueba">
-            <div class="card-body">
-                <h5 class="card-title">Card title</h5>
-                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
-                    card’s
-                    content.</p>
-                <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
+          </div>
         </div>
-
-        <div class="card" style="width: 20rem;">
-            <img src="https://picsum.photos/600/400" class="card-img-top" alt="Foto de prueba">
-            <div class="card-body">
-                <h5 class="card-title">Card title</h5>
-                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
-                    card’s
-                    content.</p>
-                <a href="#" class="btn btn-primary">Go somewhere</a>
-            </div>
-        </div>
-
+      </div>
     </div>
+  </section>
+
+  <!-- ================= SECCIÓN 2: PÁGINA PRINCIPAL (Oculta al inicio) ================= -->
+  <div id="main-app" class="is-hidden">
+    
+    <!-- Barra de Navegación -->
+    <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item has-text-weight-bold has-text-warning" href="#">
+            <i class="fas fa-star mr-2"></i> Salon_Eventos_SyL
+          </a>
+
+          <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
+        </div>
+
+        <div id="navbarBasicExample" class="navbar-menu">
+          <div class="navbar-start">
+            <a class="navbar-item">Inicio</a>
+            
+            <!-- Menú desplegable con salones -->
+            <div class="navbar-item has-dropdown is-hoverable">
+              <a class="navbar-link">Explorar Salones</a>
+              <div class="navbar-dropdown">
+                <a class="navbar-item">Salón Imperial</a>
+                <a class="navbar-item">Salón Cristal</a>
+                <a class="navbar-item">Salón Jardín</a>
+                <hr class="navbar-divider">
+                <a class="navbar-item has-text-weight-bold text-primary">Ver todos los salones</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="navbar-end">
+            <div class="navbar-item">
+              <span id="user-badge" class="tag is-warning is-medium mr-3">Usuario</span>
+              <div class="buttons">
+                <button onclick="cerrarSesion()" class="button is-light is-small">Cerrar Sesión</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section con buscador de salones e imagen de fondo -->
+    <section class="hero hero-background is-large">
+      <div class="hero-body">
+        <div class="container has-text-centered">
+          <h1 class="title is-2 has-text-white mb-3">Encontrá el espacio perfecto para tu evento</h1>
+          <p class="subtitle is-5 has-text-light mb-6">Buscá por nombre exacto o filtrá según la cantidad de invitados.</p>
+          
+          <!-- Barra de Búsqueda -->
+          <div class="box max-w-lg mx-auto p-4 has-background-white-ter" style="max-width: 600px; margin: 0 auto;">
+            <div class="field is-grouped">
+              <div class="control is-expanded">
+                <input class="input is-medium" type="text" id="input-buscar" placeholder="Ej: Salón Imperial o capacidad...">
+              </div>
+              <div class="control">
+                <button onclick="realizarBusqueda()" class="button is-warning is-medium has-text-weight-bold">
+                  <i class="fas fa-search mr-2"></i> Buscar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel exclusivo para Administrador -->
+          <div id="admin-panel" class="notification is-danger is-light mt-6 is-hidden" style="max-width: 600px; margin: 0 auto;">
+            <h3 class="title is-5 has-text-danger-dark"><i class="fas fa-user-shield mr-2"></i> Panel de Control de Administrador</h3>
+            <p>Tenés permisos especiales. Podés agregar nuevos salones, modificar precios de los servicios y ver reportes de reservas globales.</p>
+            <button class="button is-danger is-small mt-3">Gestionar Base de Datos</button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+    <script src="script.js"></script>
+
+  </div>
+
 
 
 
