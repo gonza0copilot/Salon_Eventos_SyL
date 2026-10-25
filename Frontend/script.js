@@ -55,7 +55,7 @@ function manejarRegistro(event) {
   const datosCliente = { nombre, email, password };
 
   // Enviar datos al backend PHP mediante Fetch
-  fetch('../registro_usuarios.php', {
+  fetch('../Backend/registro_usuarios.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
