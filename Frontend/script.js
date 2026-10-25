@@ -37,12 +37,49 @@ function manejarLogin(event) {
   }
 }
 
-// Lógica de Registro simulado
+
+
+// Lógica de Registro conectada a la Base de Datos PHP
 function manejarRegistro(event) {
   event.preventDefault();
-  alert('¡Cuenta creada con éxito! Ahora podés iniciar sesión.');
-  document.querySelector('#auth-tabs li[data-tab="login"]').click();
+
+  // Capturar los inputs del formulario de registro en el index.html
+  
+  const formRegister = document.getElementById('form-register');
+  const inputs = formRegister.querySelectorAll('input');
+  
+  const nombre = inputs[0].value;
+  const email = inputs[1].value;
+  const password = inputs[2].value;
+
+  const datosCliente = { nombre, email, password };
+
+  // Enviar datos al backend PHP mediante Fetch
+  fetch('registrar.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(datosCliente)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert(data.message);
+      // Cambiar automáticamente a la pestaña de login
+      document.querySelector('#auth-tabs li[data-tab="login"]').click();
+      formRegister.reset();
+    } else {
+      alert("Error: " + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Ocurrió un error al conectar con el servidor.');
+  });
 }
+
+
 
 // Cerrar Sesión
 function cerrarSesion() {
