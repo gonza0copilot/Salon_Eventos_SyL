@@ -1,7 +1,7 @@
 <?php
 // Configuración de los parámetros de acceso a MySQL
 $host = "127.0.0.1";
-$db   = "gestion_salones";
+$db   = "salon_eventos_syl";
 $user = "root";        // Cambia si tu usuario de MySQL es distinto
 $pass = "";            // Ingresa la contraseña de tu MySQL
 $charset = "utf8mb4";
