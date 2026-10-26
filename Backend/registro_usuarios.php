@@ -5,7 +5,6 @@ require_once "conexion.php";
 // Obtener los datos enviados por POST desde JavaScript
 $data = json_decode(file_get_contents("php://input"), true);
 
-
 if ($data) {
     $nombre = trim($data['nombre'] ?? '');
     $email = trim($data['email'] ?? '');
@@ -17,21 +16,23 @@ if ($data) {
     }
 
     try {
-        // Separar nombre y apellido de forma básica para adaptarlo a tu tabla cliente
+        // Separar nombre y apellido de forma básica
         $partes = explode(' ', $nombre, 2);
         $nombres = $partes[0];
         $apellidos = isset($partes[1]) ? $partes[1] : 'Sin apellido';
         
-        // Generar un DNI/CUIT temporal único basado en el tiempo para evitar errores de campo único en pruebas
         $dni_cuit = "TEMP-" . time(); 
         $telefono = "Sin teléfono";
 
-        // Insertar en la tabla cliente
-        $sql = "INSERT INTO cliente (nombre, apellido, dni_cuit, telefono, email) VALUES (?, ?, ?, ?, ?)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$nombres, $apellidos, $dni_cuit, $telefono, $email]);
+        // Cifrar la contraseña por seguridad
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        echo json_encode(["status" => "success", "message" => "¡Registro exitoso en la base de datos!"]);
+        // Insertar en la tabla cliente incluyendo la contraseña cifrada
+        $sql = "INSERT INTO cliente (nombre, apellido, dni_cuit, telefono, email, contrasena) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$nombres, $apellidos, $dni_cuit, $telefono, $email, $passwordHash]);
+
+        echo json_encode(["status" => "success", "message" => "¡Registro y contraseña guardados con éxito!"]);
 
     } catch (\PDOException $e) {
         // Código 23000 es duplicidad de entrada (email ya registrado)
