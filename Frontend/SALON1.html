@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Salón Imperial - Bulma CSS</title>
-  
+
   <!-- Bulma CSS CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <!-- FontAwesome Icons -->
@@ -12,6 +13,7 @@
   <!-- Estilos propios -->
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
   <!-- BARRA DE NAVEGACIÓN -->
@@ -24,7 +26,7 @@
         <a class="navbar-item" href="index.html">Inicio</a>
       </div>
       <div class="navbar-end">
-        
+
         <div class="navbar-item">
           <span class="tag is-light">Gonzalez Miranda</span>
         </div>
@@ -37,7 +39,7 @@
     <div class="hero-body">
       <div class="container">
         <div class="columns is-vcentered">
-          
+
           <div class="column is-6">
             <span class="tag is-warning is-medium has-text-weight-bold mb-3">
               <i class="fas fa-users mr-2"></i> Capacidad: Hasta 350 Personas
@@ -45,23 +47,30 @@
             <h1 class="title is-1 has-text-white mb-3">Salón Imperial</h1>
             <br>
             <p class="subtitle is-5 has-text-light opacity-85 mb-5">
-              Un espacio elegante diseñado para todo tipo de eventos. Espacioso, moderno y totalmente equipable según tus necesidades.
+              Un espacio elegante diseñado para todo tipo de eventos. Espacioso, moderno y totalmente equipable según
+              tus necesidades.
             </p>
 
             <div class="is-flex is-align-items-center mb-4" style="gap: 2rem;">
               <div>
-                <span class="is-size-7 has-text-grey-light text-uppercase has-text-weight-semibold">Alquiler Base del Salón</span>
+                <span class="is-size-7 has-text-grey-light text-uppercase has-text-weight-semibold">Alquiler Base del
+                  Salón</span>
                 <p class="title is-3 has-text-warning mb-0">$180.000</p>
+
+                <span class="is-size-7 has-text-grey-light text-uppercase has-text-weight-semibold mt-2 d-block">Precio
+                  Final Estimado</span>
+                <p id="precio-final" class="title is-3 has-text-white mb-0">$180.000</p>
               </div>
               <a href="#formulario-demo" class="button is-warning is-medium has-text-weight-bold shadow">
-                <i class="fas fa-calendar-check mr-2"></i>Cotizar o Reservar
+                <i class="fas fa-calendar-check mr-2"></i> Reservar
               </a>
             </div>
           </div>
 
           <div class="column is-6 has-text-centered">
             <div class="main-image-container">
-              <img id="foto-principal" src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1000" alt="Vista Principal del Salón">
+              <img id="foto-principal" src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1000"
+                alt="Vista Principal del Salón">
             </div>
           </div>
 
@@ -73,16 +82,20 @@
             <i class="fas fa-images mr-1"></i> Galería de Fotos (Elegí una imagen para ampliar):
           </p>
           <div class="thumb-gallery-horizontal">
-            <div class="thumb-card active" onclick="cambiarFoto('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1000', this)">
+            <div class="thumb-card active"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1000', this)">
               <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=300" alt="Pista principal">
             </div>
-            <div class="thumb-card" onclick="cambiarFoto('https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1000', this)">
+            <div class="thumb-card"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=1000', this)">
               <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=300" alt="Mesas y Ambientación">
             </div>
-            <div class="thumb-card" onclick="cambiarFoto('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1000', this)">
+            <div class="thumb-card"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1000', this)">
               <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=300" alt="Entrada exterior">
             </div>
-            <div class="thumb-card" onclick="cambiarFoto('https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1000', this)">
+            <div class="thumb-card"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1000', this)">
               <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=300" alt="Iluminación nocturna">
             </div>
           </div>
@@ -98,10 +111,11 @@
       <div class="box p-5 p-md-6 shadow-box">
         <h3 class="title is-4 has-text-centered mb-2">Simulador de Reserva</h3>
         <br>
-        <p class="subtitle is-6 has-text-grey has-text-centered mb-5">Completá tus datos y seleccioná únicamente los servicios adicionales que desees incluir.</p>
+        <p class="subtitle is-6 has-text-grey has-text-centered mb-5">Completá tus datos y seleccioná únicamente los
+          servicios adicionales que desees incluir.</p>
 
         <form onsubmit="event.preventDefault(); alert('¡Simulación enviada con éxito!');">
-          
+
           <!-- DATOS BÁSICOS -->
           <h5 class="subtitle is-6 has-text-weight-bold has-text-warning-dark mb-3">
             <span class="tag is-warning mr-2">1</span> Datos del Evento
@@ -135,15 +149,16 @@
             <span class="tag is-warning mr-2">2</span> Servicios Opcionales
           </h5>
           <p class="is-size-7 has-text-grey mb-4">Podés marcar o desmarcar cada servicio de forma independiente:</p>
-          
+
           <div class="columns is-multiline mb-5">
-            
+
             <!-- DJ -->
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-compact-disc text-primary mr-1"></i> DJ y Sonido</span>
+                  <input type="checkbox" class="mr-2">
+                  <span class="has-text-weight-semibold"><i class="fas fa-compact-disc text-primary mr-1"></i> DJ y
+                    Sonido</span>
                 </label>
               </div>
             </div>
@@ -153,19 +168,23 @@
               <div class="service-checkbox-card-catering">
                 <div class="is-flex is-align-items-center mb-2">
                   <label class="checkbox is-flex is-align-items-center mb-0" style="cursor: pointer;">
-                    <input type="checkbox" id="check-catering" class="mr-2" onchange="toggleCateringMenu()"> 
-                    <span class="has-text-weight-semibold"><i class="fas fa-utensils text-success mr-1"></i> Catering / Menú (Seleccionar opción)</span>
+                    <input type="checkbox" id="check-catering" class="mr-2" onchange="toggleCateringMenu()">
+                    <span class="has-text-weight-semibold"><i class="fas fa-utensils text-success mr-1"></i> Catering /
+                      Menú (Seleccionar opción)</span>
                   </label>
                 </div>
-                
+
                 <!-- Menú desplegable oculto por defecto hasta que marquen el checkbox -->
                 <div id="contenedor-menu-select" class="control mt-3 is-hidden">
                   <div class="select is-fullwidth is-small">
                     <select id="opcion-menu">
                       <option value="" disabled selected>-- Elegí una opción de menú --</option>
-                      <option value="1">Opción 1: Entrada con picada | Principal: Asado Completo | Postre: Lemon Pie</option>
-                      <option value="2">Opción 2: Entrada con empanadas | Principal: Lomo al champiñon | Postre: Tiramisu</option>
-                      <option value="3">Opción 3: Entrada con bruschettas | Principal: Arrollado de pollo | Postre: Bombon Suizo</option>
+                      <option value="1">Opción 1: Entrada con picada | Principal: Asado Completo | Postre: Lemon Pie
+                      </option>
+                      <option value="2">Opción 2: Entrada con empanadas | Principal: Lomo al champiñon | Postre:
+                        Tiramisu</option>
+                      <option value="3">Opción 3: Entrada con bruschettas | Principal: Arrollado de pollo | Postre:
+                        Bombon Suizo</option>
                     </select>
                   </div>
                 </div>
@@ -176,8 +195,9 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-fan text-danger mr-1"></i> Decoración y Ambientación</span>
+                  <input type="checkbox" class="mr-2">
+                  <span class="has-text-weight-semibold"><i class="fas fa-fan text-danger mr-1"></i> Decoración y
+                    Ambientación</span>
                 </label>
               </div>
             </div>
@@ -186,8 +206,9 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-shield-alt text-dark mr-1"></i> Seguridad y Limpieza</span>
+                  <input type="checkbox" class="mr-2">
+                  <span class="has-text-weight-semibold"><i class="fas fa-shield-alt text-dark mr-1"></i> Seguridad y
+                    Limpieza</span>
                 </label>
               </div>
             </div>
@@ -196,8 +217,9 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-camera text-info mr-1"></i> Fotografía y Video</span>
+                  <input type="checkbox" class="mr-2">
+                  <span class="has-text-weight-semibold"><i class="fas fa-camera text-info mr-1"></i> Fotografía y
+                    Video</span>
                 </label>
               </div>
             </div>
@@ -206,8 +228,9 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-glass-cheers text-warning mr-1"></i> Barra Libre / Coctelería</span>
+                  <input type="checkbox" class="mr-2">
+                  <span class="has-text-weight-semibold"><i class="fas fa-glass-cheers text-warning mr-1"></i> Barra
+                    Libre / Coctelería</span>
                 </label>
               </div>
             </div>
@@ -258,4 +281,5 @@
   <!-- Script independiente -->
   <script src="script.js"></script>
 </body>
+
 </html>
