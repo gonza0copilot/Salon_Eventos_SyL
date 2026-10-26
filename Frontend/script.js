@@ -243,23 +243,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function calcularTotal() {
-  let precioBase = 180000;
+  // Leer dinámicamente el precio base desde el HTML del salón actual
+  const elementoBase = document.getElementById('precio-base');
+  let precioBase = 180000; // Valor por defecto de respaldo
+
+  if (elementoBase) {
+    // Limpiar el texto (ej: "$250.000" se convierte en el número 250000)
+    const textoLimpio = elementoBase.textContent.replace('$', '').replace(/\./g, '').trim();
+    precioBase = parseInt(textoLimpio, 10) || 180000;
+  }
+
   let total = precioBase;
 
-  
- 
-    
-  
- 
-
-  // Buscar todos los checkboxes de servicios que estén marcados
+  // Buscar todos los checkboxes de servicios adicionales que estén marcados
   const checkboxes = document.querySelectorAll('.servicio-check:checked');
 
   checkboxes.forEach(checkbox => {
     total += parseInt(checkbox.getAttribute('data-precio')) || 0;
   });
 
-  // Mostrar el precio final formateado con puntos (ej: $230.000)
+  // Mostrar el precio final formateado con puntos (ej: $335.000)
   const elementoPrecio = document.getElementById('precio-final');
   if (elementoPrecio) {
     elementoPrecio.textContent = '$' + total.toLocaleString('es-AR');
