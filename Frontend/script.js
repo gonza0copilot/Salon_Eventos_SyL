@@ -245,6 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function calcularTotal() {
   let precioBase = 180000;
   let total = precioBase;
+
+  
+ 
+    
+  
  
 
   // Buscar todos los checkboxes de servicios que estén marcados
