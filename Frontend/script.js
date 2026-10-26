@@ -268,3 +268,60 @@ function calcularTotal() {
     elementoPrecio.textContent = '$' + total.toLocaleString('es-AR');
   }
 }
+
+
+// Enviar la reserva real al Backend (pasando el ID del salón, ej: 1 para Imperial)
+function enviarReservaReal(event, idSalon) {
+  event.preventDefault();
+
+  // Capturar valores del formulario del salón
+  const fechaEvento = document.getElementById('fecha-evento').value;
+  
+  // Buscar inputs del bloque de contacto (3)
+  const inputsForm = event.target.querySelectorAll('input');
+  const nombre = inputsForm[1] ? inputsForm[1].value : "Cliente Web"; // Ajustar según orden de inputs
+  const dni = inputsForm[2] ? inputsForm[2].value : "Sin DNI";
+  const telefono = inputsForm[3] ? inputsForm[3].value : "Sin Teléfono";
+  
+  // Tomar el email del input o usar uno genérico si no está visible en esa sección
+  const email = prompt("Por favor, ingresá tu correo electrónico registrado para asociar la reserva:") || "cliente@test.com";
+
+  // Leer el precio final calculado en pantalla (limpiando formato)
+  const elementoPrecio = document.getElementById('precio-final');
+  let montoTotal = 180000;
+  if (elementoPrecio) {
+    montoTotal = parseInt(elementoPrecio.textContent.replace('$', '').replace(/\./g, ''), 10) || 180000;
+  }
+
+  const datosReserva = {
+    id_salon: idSalon,
+    fecha_evento: fechaEvento,
+    turno: "Noche", // O capturar del select de turnos si lo deseas
+    monto_total: montoTotal,
+    nombre: nombre,
+    dni: dni,
+    telefono: telefono,
+    email: email
+  };
+
+  fetch('../Backend/procesar_reserva.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(datosReserva)
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert(data.message);
+        location.reload(); // Recargar la página para limpiar
+      } else {
+        alert("Error: " + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Hubo un error al procesar la reserva con el servidor.');
+    });
+}
