@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Casita de fiesta</title>
-  
+
   <!-- Bulma CSS CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <!-- FontAwesome Icons -->
@@ -12,6 +13,7 @@
   <!-- Estilos propios -->
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
   <!-- BARRA DE NAVEGACIÓN -->
@@ -21,7 +23,7 @@
         <a class="navbar-item has-text-weight-bold has-text-warning" href="#">
           <i class="fas fa-star mr-2"></i>Salon_Eventos_SyL
         </a>
-         <a class="navbar-item" href="index.html">Inicio</a>
+        <a class="navbar-item" href="index.html">Inicio</a>
       </div>
       <div class="navbar-end">
         <div class="navbar-item">
@@ -36,7 +38,7 @@
     <div class="hero-body">
       <div class="container">
         <div class="columns is-vcentered">
-          
+
           <div class="column is-6">
             <span class="tag is-warning is-medium has-text-weight-bold mb-3">
               <i class="fas fa-users mr-2"></i> Capacidad: Hasta 70 Personas
@@ -49,8 +51,13 @@
 
             <div class="is-flex is-align-items-center mb-4" style="gap: 2rem;">
               <div>
-                <span class="is-size-7 has-text-grey-light text-uppercase has-text-weight-semibold">Alquiler Base del Salón</span>
-                <p class="title is-3 has-text-warning mb-0">$180.000</p>
+                <span class="is-size-7 has-text-grey-light text-uppercase has-text-weight-semibold">Alquiler Base del
+                  Salón</span>
+                <p class="title is-3 has-text-warning mb-0">$250.000</p>
+
+                <span class="is-size-7 has-text-grey-light text-uppercase has-text-weight-semibold mt-2 d-block">Precio
+                  Final Estimado</span>
+                <p id="precio-final" class="title is-3 has-text-white mb-0">$250.000</p>
               </div>
               <a href="#formulario-demo" class="button is-warning is-medium has-text-weight-bold shadow">
                 <i class="fas fa-calendar-check mr-2"></i>Cotizar o Reservar
@@ -61,7 +68,8 @@
           <div class="column is-6 has-text-centered">
             <div class="main-image-container">
               <!-- Foto Principal Actualizada -->
-              <img id="foto-principal" src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1000" alt="Vista Principal del Salón">
+              <img id="foto-principal" src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1000"
+                alt="Vista Principal del Salón">
             </div>
           </div>
 
@@ -74,20 +82,27 @@
           </p>
           <div class="thumb-gallery-horizontal">
             <!-- Imagen 1 -->
-            <div class="thumb-card active" onclick="cambiarFoto('https://images.unsplash.com/photo-1511578314322-379afb476865?w=1000', this)">
+            <div class="thumb-card active"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1511578314322-379afb476865?w=1000', this)">
               <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=300" alt="Gran Salón y Pista">
             </div>
             <!-- Imagen 2 -->
-            <div class="thumb-card" onclick="cambiarFoto('https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=1000', this)">
-              <img src="https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=300" alt="Ambientación y Mesas Elegantes">
+            <div class="thumb-card"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=1000', this)">
+              <img src="https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=300"
+                alt="Ambientación y Mesas Elegantes">
             </div>
             <!-- Imagen 3 -->
-            <div class="thumb-card" onclick="cambiarFoto('https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1000', this)">
-              <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=300" alt="Decoración de Fiesta y Globos">
+            <div class="thumb-card"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1000', this)">
+              <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=300"
+                alt="Decoración de Fiesta y Globos">
             </div>
             <!-- Imagen 4 -->
-            <div class="thumb-card" onclick="cambiarFoto('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000', this)">
-              <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300" alt="Pista de Baile y Luces DJ">
+            <div class="thumb-card"
+              onclick="cambiarFoto('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000', this)">
+              <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300"
+                alt="Pista de Baile y Luces DJ">
             </div>
           </div>
         </div>
@@ -102,10 +117,11 @@
       <div class="box p-5 p-md-6 shadow-box">
         <h3 class="title is-4 has-text-centered mb-2">Simulador de Reserva</h3>
         <br>
-        <p class="subtitle is-6 has-text-grey has-text-centered mb-5">Completá tus datos y seleccioná únicamente los servicios adicionales que desees incluir.</p>
+        <p class="subtitle is-6 has-text-grey has-text-centered mb-5">Completá tus datos y seleccioná únicamente los
+          servicios adicionales que desees incluir.</p>
 
         <form onsubmit="event.preventDefault(); alert('¡Simulación enviada con éxito!');">
-          
+
           <!-- DATOS BÁSICOS -->
           <h5 class="subtitle is-6 has-text-weight-bold has-text-warning-dark mb-3">
             <span class="tag is-warning mr-2">1</span> Datos del Evento
@@ -139,37 +155,34 @@
             <span class="tag is-warning mr-2">2</span> Servicios Opcionales
           </h5>
           <p class="is-size-7 has-text-grey mb-4">Podés marcar o desmarcar cada servicio de forma independiente:</p>
-          
+
           <div class="columns is-multiline mb-5">
-            
-            <!-- DJ -->
-            <div class="column is-6">
-              <div class="service-checkbox-card">
-                <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-compact-disc text-primary mr-1"></i> DJ y Sonido</span>
-                </label>
-              </div>
-            </div>
+
+
 
             <!-- CATERING CON SELECTOR DE MENÚ -->
             <div class="column is-12">
               <div class="service-checkbox-card-catering">
-                <div class="is-flex is-align-items-center mb-2">
+                <div class="is-flex is-align-items-center mb-2 ">
                   <label class="checkbox is-flex is-align-items-center mb-0" style="cursor: pointer;">
-                    <input type="checkbox" id="check-catering" class="mr-2" onchange="toggleCateringMenu()"> 
-                    <span class="has-text-weight-semibold"><i class="fas fa-utensils text-success mr-1"></i> Catering / Menú (Seleccionar opción)</span>
+                    <input type="checkbox" id="check-catering" class="mr-2 servicio-check" data-precio="85000"
+                      onchange="calcularTotal()" onchange="toggleCateringMenu()">
+                    <span class="has-text-weight-semibold"><i class="fas fa-utensils text-success mr-1"></i> Catering /
+                      Menú (Seleccionar opción) ($85.000)</span>
                   </label>
                 </div>
-                
+
                 <!-- Menú desplegable oculto por defecto hasta que marquen el checkbox -->
                 <div id="contenedor-menu-select" class="control mt-3 is-hidden">
                   <div class="select is-fullwidth is-small">
                     <select id="opcion-menu">
                       <option value="" disabled selected>-- Elegí una opción de menú --</option>
-                      <option value="1">Opción 1: Entrada con picada | Principal: Asado Completo | Postre: Lemon Pie</option>
-                      <option value="2">Opción 2: Entrada con empanadas | Principal: Lomo al champiñon | Postre: Tiramisu</option>
-                      <option value="3">Opción 3: Entrada con bruschettas | Principal: Arrollado de pollo | Postre: Bombon Suizo</option>
+                      <option value="1">Opción 1: Entrada con picada | Principal: Asado Completo | Postre: Lemon Pie
+                      </option>
+                      <option value="2">Opción 2: Entrada con empanadas | Principal: Lomo al champiñon | Postre:
+                        Tiramisu</option>
+                      <option value="3">Opción 3: Entrada con bruschettas | Principal: Arrollado de pollo | Postre:
+                        Bombon Suizo</option>
                     </select>
                   </div>
                 </div>
@@ -180,18 +193,20 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-fan text-danger mr-1"></i> Decoración y Ambientación</span>
+                  <input type="checkbox" class="mr-2">
+                  <span class="has-text-weight-semibold"><i class="fas fa-fan text-danger mr-1"></i> Decoración y
+                    Ambientación (incluido)</span>
                 </label>
               </div>
             </div>
 
-            <!-- SEGURIDAD -->
+            <!-- SOUVENIRS -->
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-shield-alt text-dark mr-1"></i> Seguridad y Limpieza</span>
+                  <input type="checkbox" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
+                  <span class="has-text-weight-semibold"><i class="fas fa-shield-alt text-dark mr-1"></i> 
+                    Souvenirs ($50.000)</span>
                 </label>
               </div>
             </div>
@@ -200,18 +215,22 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-camera text-info mr-1"></i> Fotografía y Video</span>
+                  <input type="checkbox" class="mr-2 ">
+                  <span class="has-text-weight-semibold"><i class="fas fa-camera text-info mr-1"></i> Dj y Sonido
+                    (incluido)</span>
                 </label>
               </div>
             </div>
 
-            <!-- BARRA LIBRE -->
+            
+
+            <!-- DJ -->
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" class="mr-2"> 
-                  <span class="has-text-weight-semibold"><i class="fas fa-glass-cheers text-warning mr-1"></i> Barra Libre / Coctelería</span>
+                  <input type="checkbox" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
+                  <span class="has-text-weight-semibold"><i class="fas fa-compact-disc text-primary mr-1"></i> Fotografía y
+                    video ($50.000)</span>
                 </label>
               </div>
             </div>
@@ -262,4 +281,5 @@
   <!-- Script independiente -->
   <script src="script.js"></script>
 </body>
+
 </html>
