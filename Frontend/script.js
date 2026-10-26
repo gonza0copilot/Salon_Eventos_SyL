@@ -1,11 +1,11 @@
 // Sistema de Pestañas del Login / Registro
 document.querySelectorAll('#auth-tabs li').forEach(item => {
-  item.addEventListener('click', function() {
+  item.addEventListener('click', function () {
     document.querySelectorAll('#auth-tabs li').forEach(li => li.classList.remove('is-active'));
     this.classList.add('is-active');
-    
+
     const tab = this.getAttribute('data-tab');
-    if(tab === 'login') {
+    if (tab === 'login') {
       document.getElementById('form-login').classList.remove('is-hidden');
       document.getElementById('form-register').classList.add('is-hidden');
     } else {
@@ -44,10 +44,10 @@ function manejarRegistro(event) {
   event.preventDefault();
 
   // Capturar los inputs del formulario de registro en el index.html
-  
+
   const formRegister = document.getElementById('form-register');
   const inputs = formRegister.querySelectorAll('input');
-  
+
   const nombre = inputs[0].value;
   const email = inputs[1].value;
   const password = inputs[2].value;
@@ -62,21 +62,21 @@ function manejarRegistro(event) {
     },
     body: JSON.stringify(datosCliente)
   })
-  .then(response => response.json())
-  .then(data => {
-    if (data.status === 'success') {
-      alert(data.message);
-      // Cambiar automáticamente a la pestaña de login
-      document.querySelector('#auth-tabs li[data-tab="login"]').click();
-      formRegister.reset();
-    } else {
-      alert("Error: " + data.message);
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Ocurrió un error al conectar con el servidor.');
-  });
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert(data.message);
+        // Cambiar automáticamente a la pestaña de login
+        document.querySelector('#auth-tabs li[data-tab="login"]').click();
+        formRegister.reset();
+      } else {
+        alert("Error: " + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Ocurrió un error al conectar con el servidor.');
+    });
 }
 
 
@@ -91,7 +91,7 @@ function cerrarSesion() {
 // Búsqueda simulada
 function realizarBusqueda() {
   const query = document.getElementById('input-buscar').value;
-  if(query.trim() !== "") {
+  if (query.trim() !== "") {
     alert("Buscando resultados para: " + query);
   } else {
     alert("Por favor ingresa un nombre o capacidad para buscar.");
@@ -104,9 +104,9 @@ function realizarBusqueda() {
 // Cambiar foto de la galería horizontal
 function cambiarFoto(urlNueva, tarjetaClickeada) {
   const imgPrincipal = document.getElementById('foto-principal');
-  
+
   imgPrincipal.style.opacity = '0.2';
-  
+
   setTimeout(() => {
     imgPrincipal.src = urlNueva;
     imgPrincipal.style.opacity = '1';
@@ -120,7 +120,7 @@ function cambiarFoto(urlNueva, tarjetaClickeada) {
 function toggleCateringMenu() {
   const checkboxCatering = document.getElementById('check-catering');
   const contenedorMenu = document.getElementById('contenedor-menu-select');
-  
+
   if (checkboxCatering.checked) {
     contenedorMenu.classList.remove('is-hidden');
   } else {
@@ -163,7 +163,7 @@ const salones = [
 function realizarBusqueda() {
   const input = document.getElementById('input-buscar').value.trim();
   const contenedor = document.getElementById('resultados-busqueda');
-  
+
   if (!contenedor) return;
 
   // Limpiar resultados anteriores
@@ -183,7 +183,7 @@ function realizarBusqueda() {
     resultados = salones.filter(salon => salon.capacidad >= cantidadInvitados);
   } else {
     // Filtrar por coincidencia en el nombre (sin importar mayúsculas/minúsculas)
-    resultados = salones.filter(salon => 
+    resultados = salones.filter(salon =>
       salon.nombre.toLowerCase().includes(input.toLowerCase())
     );
   }
@@ -243,8 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function calcularTotal() {
-  const precioBase = 180000;
+  let precioBase = 180000;
   let total = precioBase;
+ 
 
   // Buscar todos los checkboxes de servicios que estén marcados
   const checkboxes = document.querySelectorAll('.servicio-check:checked');

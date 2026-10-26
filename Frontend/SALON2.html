@@ -166,7 +166,7 @@
                 <div class="is-flex is-align-items-center mb-2 ">
                   <label class="checkbox is-flex is-align-items-center mb-0" style="cursor: pointer;">
                     <input type="checkbox" id="check-catering" class="mr-2 servicio-check" data-precio="85000"
-                      onchange="calcularTotal()" onchange="toggleCateringMenu()">
+                      onchange="toggleCateringMenu();calcularTotal();">
                     <span class="has-text-weight-semibold"><i class="fas fa-utensils text-success mr-1"></i> Catering /
                       Menú (Seleccionar opción) ($85.000)</span>
                   </label>
@@ -176,7 +176,8 @@
                 <div id="contenedor-menu-select" class="control mt-3 is-hidden">
                   <div class="select is-fullwidth is-small">
                     <select id="opcion-menu">
-                      <option value="" disabled selected>-- Elegí una opción de menú --</option>
+                      <option value="" disabled selected>-- Elegí una opción de menú (menu infantil ya cubierto) --
+                      </option>
                       <option value="1">Opción 1: Entrada con picada | Principal: Asado Completo | Postre: Lemon Pie
                       </option>
                       <option value="2">Opción 2: Entrada con empanadas | Principal: Lomo al champiñon | Postre:
@@ -205,7 +206,7 @@
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
                   <input type="checkbox" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
-                  <span class="has-text-weight-semibold"><i class="fas fa-shield-alt text-dark mr-1"></i> 
+                  <span class="has-text-weight-semibold"><i class="fas fa-shield-alt text-dark mr-1"></i>
                     Souvenirs ($50.000)</span>
                 </label>
               </div>
@@ -222,14 +223,15 @@
               </div>
             </div>
 
-            
+
 
             <!-- DJ -->
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
                   <input type="checkbox" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
-                  <span class="has-text-weight-semibold"><i class="fas fa-compact-disc text-primary mr-1"></i> Fotografía y
+                  <span class="has-text-weight-semibold"><i class="fas fa-compact-disc text-primary mr-1"></i>
+                    Fotografía y
                     video ($50.000)</span>
                 </label>
               </div>
