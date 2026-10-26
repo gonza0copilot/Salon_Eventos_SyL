@@ -231,3 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// Restringir el calendario para que no permita seleccionar fechas pasadas
+document.addEventListener('DOMContentLoaded', () => {
+  const inputFecha = document.getElementById('fecha-evento');
+  if (inputFecha) {
+    const hoy = new Date().toISOString().split('T')[0];
+    inputFecha.min = hoy;
+  }
+});
