@@ -240,3 +240,22 @@ document.addEventListener('DOMContentLoaded', () => {
     inputFecha.min = hoy;
   }
 });
+
+
+function calcularTotal() {
+  const precioBase = 180000;
+  let total = precioBase;
+
+  // Buscar todos los checkboxes de servicios que estén marcados
+  const checkboxes = document.querySelectorAll('.servicio-check:checked');
+
+  checkboxes.forEach(checkbox => {
+    total += parseInt(checkbox.getAttribute('data-precio')) || 0;
+  });
+
+  // Mostrar el precio final formateado con puntos (ej: $230.000)
+  const elementoPrecio = document.getElementById('precio-final');
+  if (elementoPrecio) {
+    elementoPrecio.textContent = '$' + total.toLocaleString('es-AR');
+  }
+}
