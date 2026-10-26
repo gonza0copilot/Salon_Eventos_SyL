@@ -134,7 +134,7 @@ function toggleCateringMenu() {
 const salones = [
   {
     id: 1,
-    nombre: "Salón Imperial",
+    nombre: "Salon Imperial",
     capacidad: 350,
     url: "SALON1.html",
     descripcion: "Espacio elegante para grandes eventos y casamientos."
@@ -148,7 +148,7 @@ const salones = [
   },
   {
     id: 3,
-    nombre: "Salón Quincho",
+    nombre: "Salon Quincho",
     capacidad: 150,
     url: "SALON3.html",
     descripcion: "Quincho campestre ideal para asados y eventos al aire libre."
