@@ -11,7 +11,4 @@ fetch(URL)
   .catch(error => console.error('Error al obtener reservas:', error));
 
 
-  
-
-
-
+ 
