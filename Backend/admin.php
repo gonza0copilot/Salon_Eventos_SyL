@@ -221,7 +221,7 @@ $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC
   <!-- CONTENIDO PRINCIPAL -->
   <section class="section">
     <div class="container">
-      <h1 class="title is-3 has-text-centered mb-5">Gestión y ABM del Sistema</h1>
+      <h1 class="title is-3 has-text-centered mb-5">Gestión y ABM del Sistema</h1> 
 
       <?php if (!empty($mensaje)): ?>
         <div class="notification is-success is-light"><?php echo $mensaje; ?></div>
@@ -238,7 +238,7 @@ $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC
 
       <!-- SECCIÓN 1: ABM SALONES -->
       <div id="abm-salones" class="abm-content box <?php echo ($servicioEditar || $personalEditar) ? 'is-hidden' : ''; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2>
+        <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2> <br>
         <p class="subtitle is-6">Control de altas, modificaciones y bajas de espacios.</p>
 
         <form method="POST" class="box mb-5 has-background-white-ter">
@@ -332,7 +332,7 @@ $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC
 
       <!-- SECCIÓN 2: ABM SERVICIOS -->
       <div id="abm-servicios" class="abm-content box <?php echo $servicioEditar ? '' : 'is-hidden'; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Servicios Adicionales</h2>
+        <h2 class="title is-4 has-text-warning-dark">Administrar Servicios Adicionales</h2> <br>
         <p class="subtitle is-6">Controlá los precios y detalles de catering, DJ, decoración y más.</p>
 
         <form method="POST" class="box mb-5 has-background-white-ter">
@@ -424,7 +424,7 @@ $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC
 
       <!-- SECCIÓN 3: ABM PERSONAL -->
       <div id="abm-personal" class="abm-content box <?php echo $personalEditar ? '' : 'is-hidden'; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Personal</h2>
+        <h2 class="title is-4 has-text-warning-dark">Administrar Personal</h2> <br>
         <p class="subtitle is-6">Gestioná los empleados, mozos, técnicos y coordinadores del salón.</p>
 
         <form method="POST" class="box mb-5 has-background-white-ter">
