@@ -141,22 +141,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         $tipo_personal = trim($_POST['tipo_personal']);
 
         try {
-            $stmt =$pdo->prepare("UPDATE personal SET nombre = ?, apellido = ?, dni_cuit = ?, telefono = ?, email = ?, tipo_personal = ? WHERE id_personal = ?");
-            $stmt->execute([$nombre, $apellido,$dni_cuit, $telefono,$email, $tipo_personal,$id_personal]);
+            $stmt = $pdo->prepare("UPDATE personal SET nombre = ?, apellido = ?, dni_cuit = ?, telefono = ?, email = ?, tipo_personal = ? WHERE id_personal = ?");
+            $stmt->execute([$nombre, $apellido, $dni_cuit, $telefono, $email, $tipo_personal, $id_personal]);
             header("Location: admin.php?status=personal_modificado");
             exit();
-        } catch (PDOException $e) {$mensaje = "Error al modificar el personal: " . $e->getMessage();
+        } catch (PDOException $e) {
+            $mensaje = "Error al modificar el personal: " . $e->getMessage();
         }
     }
 
     if ($accion === 'eliminar_personal') {
         $id_personal = intval($_POST['id_personal']);
         try {
-            $stmt =$pdo->prepare("DELETE FROM personal WHERE id_personal = ?");
+            $stmt = $pdo->prepare("DELETE FROM personal WHERE id_personal = ?");
             $stmt->execute([$id_personal]);
             header("Location: admin.php?status=personal_eliminado");
             exit();
-        } catch (PDOException $e) {$mensaje = "Error al eliminar el personal.";
+        } catch (PDOException $e) {
+            $mensaje = "Error al eliminar el personal.";
         }
     }
 }
@@ -164,29 +166,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
 // Ediciones
 $salonEditar = null;
 if (isset($_GET['editar'])) {
-    $stmtEdit =$pdo->prepare("SELECT * FROM salon WHERE id_salon = ?");
+    $stmtEdit = $pdo->prepare("SELECT * FROM salon WHERE id_salon = ?");
     $stmtEdit->execute([intval($_GET['editar'])]);
-    $salonEditar =$stmtEdit->fetch(PDO::FETCH_ASSOC);
+    $salonEditar = $stmtEdit->fetch(PDO::FETCH_ASSOC);
 }
 
 $servicioEditar = null;
 if (isset($_GET['editar_servicio'])) {
-    $stmtEditS =$pdo->prepare("SELECT * FROM servicio WHERE id_servicio = ?");
+    $stmtEditS = $pdo->prepare("SELECT * FROM servicio WHERE id_servicio = ?");
     $stmtEditS->execute([intval($_GET['editar_servicio'])]);
-    $servicioEditar =$stmtEditS->fetch(PDO::FETCH_ASSOC);
+    $servicioEditar = $stmtEditS->fetch(PDO::FETCH_ASSOC);
 }
 
 $personalEditar = null;
 if (isset($_GET['editar_personal'])) {
-    $stmtEditP =$pdo->prepare("SELECT * FROM personal WHERE id_personal = ?");
+    $stmtEditP = $pdo->prepare("SELECT * FROM personal WHERE id_personal = ?");
     $stmtEditP->execute([intval($_GET['editar_personal'])]);
-    $personalEditar =$stmtEditP->fetch(PDO::FETCH_ASSOC);
+    $personalEditar = $stmtEditP->fetch(PDO::FETCH_ASSOC);
 }
 
 // Listas
-$salones =$pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
-$servicios =$pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
-$personalList =$pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
+$salones = $pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
+$servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
+$personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -228,14 +230,14 @@ $personalList =$pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC)
       <!-- PESTAÑAS DE NAVEGACIÓN -->
       <div class="tabs is-boxed is-centered" id="admin-tabs">
         <ul>
-          <li class="<?php echo ($servicioEditar ||$personalEditar) ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
+          <li class="<?php echo ($servicioEditar || $personalEditar) ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
           <li class="<?php echo $servicioEditar ? 'is-active' : ''; ?>" data-target="abm-servicios"><a><i class="fas fa-concierge-bell mr-2"></i> Servicios</a></li>
           <li class="<?php echo $personalEditar ? 'is-active' : ''; ?>" data-target="abm-personal"><a><i class="fas fa-users-cog mr-2"></i> Personal</a></li>
         </ul>
       </div>
 
       <!-- SECCIÓN 1: ABM SALONES -->
-      <div id="abm-salones" class="abm-content box <?php echo ($servicioEditar ||$personalEditar) ? 'is-hidden' : ''; ?>">
+      <div id="abm-salones" class="abm-content box <?php echo ($servicioEditar || $personalEditar) ? 'is-hidden' : ''; ?>">
         <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2>
         <p class="subtitle is-6">Control de altas, modificaciones y bajas de espacios.</p>
 
@@ -305,7 +307,7 @@ $personalList =$pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC)
               </tr>
             </thead>
             <tbody>
-              <?php foreach ($salones as$salon): ?>
+              <?php foreach ($salones as $salon): ?>
                 <tr>
                   <td><?php echo $salon['id_salon']; ?></td>
                   <td><strong><?php echo htmlspecialchars($salon['nombre']); ?></strong></td>
@@ -393,7 +395,7 @@ $personalList =$pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC)
             </thead>
             <tbody>
               <?php if (count($servicios) > 0): ?>
-                <?php foreach ($servicios as$serv): ?>
+                <?php foreach ($servicios as $serv): ?>
                   <tr>
                     <td><?php echo $serv['id_servicio']; ?></td>
                     <td><strong><?php echo htmlspecialchars($serv['nombre_servicio']); ?></strong></td>
@@ -468,4 +470,81 @@ $personalList =$pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC)
             <div class="column is-4">
               <div class="field">
                 <label class="label">Tipo / Rol de Personal</label>
-                <input class="input"
+                <input class="input" type="text" name="tipo_personal" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['tipo_personal']) : ''; ?>" placeholder="Ej: Parrillero / Animador">
+              </div>
+            </div>
+            <div class="column is-12">
+              <button type="submit" class="button <?php echo $personalEditar ? 'is-info' : 'is-warning'; ?> has-text-weight-bold">
+                <?php echo $personalEditar ? 'Guardar Cambios Personal' : 'Guardar Personal'; ?>
+              </button>
+              <?php if ($personalEditar): ?>
+                <a href="admin.php" class="button is-light ml-2">Cancelar</a>
+              <?php endif; ?>
+            </div>
+          </div>
+        </form>
+
+        <h3 class="title is-5 mt-5">Personal Registrado</h3>
+        <div class="table-container">
+          <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre y Apellido</th>
+                <th>DNI / CUIT</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Rol / Tipo</th>
+                <th class="has-text-centered">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if (count($personalList) > 0): ?>
+                <?php foreach ($personalList as $p): ?>
+                  <tr>
+                    <td><?php echo $p['id_personal']; ?></td>
+                    <td><strong><?php echo htmlspecialchars($p['nombre'] . ' ' . $p['apellido']); ?></strong></td>
+                    <td><?php echo htmlspecialchars($p['dni_cuit']); ?></td>
+                    <td><?php echo htmlspecialchars($p['telefono']); ?></td>
+                    <td><?php echo htmlspecialchars($p['email']); ?></td>
+                    <td><span class="tag is-info is-light"><?php echo htmlspecialchars($p['tipo_personal']); ?></span></td>
+                    <td class="has-text-centered">
+                      <a href="admin.php?editar_personal=<?php echo $p['id_personal']; ?>" class="button is-small is-info mr-1" title="Modificar"><i class="fas fa-edit"></i></a>
+                      <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este empleado?');">
+                        <input type="hidden" name="accion" value="eliminar_personal">
+                        <input type="hidden" name="id_personal" value="<?php echo $p['id_personal']; ?>">
+                        <button type="submit" class="button is-small is-danger" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="7" class="has-text-centered">No hay personal registrado.</td>
+                </tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SCRIPT CORREGIDO PARA CAMBIAR ENTRE PESTAÑAS -->
+  <script>
+    document.querySelectorAll('#admin-tabs li').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('#admin-tabs li').forEach(item => item.classList.remove('is-active'));
+        this.classList.add('is-active');
+
+        const target = this.getAttribute('data-target');
+        document.querySelectorAll('.abm-content').forEach(content => {
+          content.classList.add('is-hidden');
+        });
+        document.getElementById(target).classList.remove('is-hidden');
+      });
+    });
+  </script>
+</body>
+</html>
