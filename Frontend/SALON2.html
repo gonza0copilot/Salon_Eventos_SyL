@@ -68,8 +68,7 @@
           <div class="column is-6 has-text-centered">
             <div class="main-image-container">
               <!-- Foto Principal Actualizada -->
-              <img id="foto-principal" src="img/salon2_FT_PRI.jpeg"
-                alt="Vista Principal del Salón">
+              <img id="foto-principal" src="img/salon2_FT_PRI.jpeg" alt="Vista Principal del Salón">
             </div>
           </div>
 
@@ -82,18 +81,15 @@
           </p>
           <div class="thumb-gallery-horizontal">
             <!-- Imagen 1 -->
-            <div class="thumb-card active"
-              onclick="cambiarFoto('img/salon2_FT_PRI.jpeg', this)">
+            <div class="thumb-card active" onclick="cambiarFoto('img/salon2_FT_PRI.jpeg', this)">
               <img src="img/salon2_FT_PRI.jpeg" alt="Gran Salón y Pista">
             </div>
             <!-- Imagen 2 -->
-            <div class="thumb-card"
-              onclick="cambiarFoto('img/salon2_FT_INT.jpeg', this)">
+            <div class="thumb-card" onclick="cambiarFoto('img/salon2_FT_INT.jpeg', this)">
               <img src="img/salon2_FT_INT.jpeg" alt="Ambientación y Mesas Elegantes">
             </div>
             <!-- Imagen 3 -->
-            <div class="thumb-card"
-              onclick="cambiarFoto('img/salon2_FT_EXT.jpeg', this)">
+            <div class="thumb-card" onclick="cambiarFoto('img/salon2_FT_EXT.jpeg', this)">
               <img src="img/salon2_FT_EXT.jpeg" alt="Decoración de Fiesta y Globos">
             </div>
           </div>
@@ -248,7 +244,8 @@
               <div class="field">
                 <label class="label">DNI</label>
                 <div class="control">
-                  <input class="input" type="text" placeholder="Sin puntos" required>
+                  <input class="input" type="tel" id="dni-cliente" placeholder="Ej: 2911234567" inputmode="numeric"
+                    pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                 </div>
               </div>
             </div>
@@ -256,7 +253,9 @@
               <div class="field">
                 <label class="label">Teléfono de Contacto</label>
                 <div class="control">
-                  <input class="input" type="tel" placeholder="Ej: 291 1234567" required>
+                  <input class="input" type="tel" id="telefono-cliente" placeholder="Ej: 291 1234567"
+                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    required>
                 </div>
               </div>
             </div>
