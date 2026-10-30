@@ -3,6 +3,11 @@ session_start();
 require_once 'conexion.php';
 
 $mensaje = "";
+if (isset($_GET['status'])) {
+    if ($_GET['status'] == 'creado') $mensaje = "¡Salón agregado con éxito!";
+    if ($_GET['status'] == 'modificado') $mensaje = "¡Salón modificado con éxito!";
+    if ($_GET['status'] == 'eliminado') $mensaje = "¡Salón eliminado con éxito!";
+}
 
 // 1. CREAR NUEVO SALÓN
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'crear_salon') {
@@ -15,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     try {
         $stmt = $pdo->prepare("INSERT INTO salon (nombre, capacidad_maxima, direccion, precio_base, tipo_salon, estado) VALUES (?, ?, ?, ?, ?, 'activo')");
         $stmt->execute([$nombre, $capacidad, $direccion, $precio_base, $tipo_salon]);
-        $mensaje = "¡Salón agregado con éxito!";
+        header("Location: admin.php?status=creado");
+        exit();
     } catch (PDOException $e) {
         $mensaje = "Error al agregar el salón: " . $e->getMessage();
     }
@@ -33,7 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     try {
         $stmt = $pdo->prepare("UPDATE salon SET nombre = ?, capacidad_maxima = ?, direccion = ?, precio_base = ?, tipo_salon = ? WHERE id_salon = ?");
         $stmt->execute([$nombre, $capacidad, $direccion, $precio_base, $tipo_salon, $id_salon]);
-        $mensaje = "¡Salón modificado con éxito!";
+        header("Location: admin.php?status=modificado");
+        exit();
     } catch (PDOException $e) {
         $mensaje = "Error al modificar el salón: " . $e->getMessage();
     }
@@ -45,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     try {
         $stmt = $pdo->prepare("DELETE FROM salon WHERE id_salon = ?");
         $stmt->execute([$id_salon]);
-        $mensaje = "¡Salón eliminado con éxito!";
+        header("Location: admin.php?status=eliminado");
+        exit();
     } catch (PDOException $e) {
         $mensaje = "Error al eliminar el salón (es posible que tenga reservas asociadas).";
     }
@@ -116,7 +124,7 @@ try {
 
       <!-- SECCIÓN 1: ABM SALONES -->
       <div id="abm-salones" class="abm-content box">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2>
+        <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2> <br>
         <p class="subtitle is-6">Listado de espacios y control de altas, modificaciones y bajas.</p>
 
         <!-- Formulario Dinámico (Crear o Modificar) -->
