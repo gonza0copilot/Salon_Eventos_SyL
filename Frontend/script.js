@@ -1,26 +1,38 @@
 // ================= SISTEMA DE PESTAÑAS (LOGIN / REGISTRO) =================
-document.querySelectorAll('#auth-tabs li').forEach(item => {
-  item.addEventListener('click', function () {
-    document.querySelectorAll('#auth-tabs li').forEach(li => li.classList.remove('is-active'));
-    this.classList.add('is-active');
+const authTabs = document.querySelectorAll('#auth-tabs li');
+if (authTabs.length > 0) {
+  authTabs.forEach(item => {
+    item.addEventListener('click', function () {
+      authTabs.forEach(li => li.classList.remove('is-active'));
+      this.classList.add('is-active');
 
-    const tab = this.getAttribute('data-tab');
-    if (tab === 'login') {
-      document.getElementById('form-login').classList.remove('is-hidden');
-      document.getElementById('form-register').classList.add('is-hidden');
-    } else {
-      document.getElementById('form-register').classList.remove('is-hidden');
-      document.getElementById('form-login').classList.add('is-hidden');
-    }
+      const tab = this.getAttribute('data-tab');
+      const formLogin = document.getElementById('form-login');
+      const formRegister = document.getElementById('form-register');
+      
+      if (formLogin && formRegister) {
+        if (tab === 'login') {
+          formLogin.classList.remove('is-hidden');
+          formRegister.classList.add('is-hidden');
+        } else {
+          formRegister.classList.remove('is-hidden');
+          formLogin.classList.add('is-hidden');
+        }
+      }
+    });
   });
-});
+}
 
 // ================= LÓGICA DE INGRESO (LOGIN) =================
 function manejarLogin(event) {
   event.preventDefault();
 
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value.trim();
+  const emailInput = document.getElementById('login-email');
+  const passwordInput = document.getElementById('login-password');
+  if (!emailInput || !passwordInput) return;
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
 
   const datosLogin = { email, password };
 
@@ -34,19 +46,32 @@ function manejarLogin(event) {
       if (data.status === 'success') {
         alert(data.message);
 
-        // Ocultar sección de login y mostrar app principal
-        document.getElementById('login-section').classList.add('is-hidden');
-        document.getElementById('main-app').classList.remove('is-hidden');
+        const esAdmin = (password === 'admin123');
+        const datosSesion = {
+          nombre: data.nombre,
+          esAdmin: esAdmin,
+          timestamp: new Date().getTime()
+        };
+        localStorage.setItem('sesion_usuario', JSON.stringify(datosSesion));
 
-        // Validar si es Administrador (según contraseña maestra o rol)
-        if (password === 'admin123') {
-          document.getElementById('user-badge').textContent = 'Administrador (Admin)';
-          document.getElementById('user-badge').className = 'tag is-danger is-medium mr-3';
-          document.getElementById('admin-panel').classList.remove('is-hidden');
-        } else {
-          document.getElementById('user-badge').textContent = 'Cliente: ' + data.nombre;
-          document.getElementById('user-badge').className = 'tag is-success is-medium mr-3';
-          document.getElementById('admin-panel').classList.add('is-hidden');
+        const loginSection = document.getElementById('login-section');
+        const mainApp = document.getElementById('main-app');
+        if (loginSection) loginSection.classList.add('is-hidden');
+        if (mainApp) mainApp.classList.remove('is-hidden');
+
+        const userBadge = document.getElementById('user-badge');
+        const adminPanel = document.getElementById('admin-panel');
+
+        if (userBadge) {
+          if (esAdmin) {
+            userBadge.textContent = 'Administrador (Admin)';
+            userBadge.className = 'tag is-danger is-medium mr-3';
+            if (adminPanel) adminPanel.classList.remove('is-hidden');
+          } else {
+            userBadge.textContent = 'Cliente: ' + data.nombre;
+            userBadge.className = 'tag is-success is-medium mr-3';
+            if (adminPanel) adminPanel.classList.add('is-hidden');
+          }
         }
       } else {
         alert("Error: " + data.message);
@@ -63,6 +88,7 @@ function manejarRegistro(event) {
   event.preventDefault();
 
   const formRegister = document.getElementById('form-register');
+  if (!formRegister) return;
   const inputs = formRegister.querySelectorAll('input');
 
   const nombre = inputs[0].value;
@@ -80,7 +106,8 @@ function manejarRegistro(event) {
     .then(data => {
       if (data.status === 'success') {
         alert(data.message);
-        document.querySelector('#auth-tabs li[data-tab="login"]').click();
+        const loginTab = document.querySelector('#auth-tabs li[data-tab="login"]');
+        if (loginTab) loginTab.click();
         formRegister.reset();
       } else {
         alert("Error: " + data.message);
@@ -94,15 +121,23 @@ function manejarRegistro(event) {
 
 // ================= CERRAR SESIÓN =================
 function cerrarSesion() {
-  document.getElementById('main-app').classList.add('is-hidden');
-  document.getElementById('login-section').classList.remove('is-hidden');
-  document.getElementById('login-password').value = '';
-  document.getElementById('form-login').reset();
+  localStorage.removeItem('sesion_usuario');
+  const loginSection = document.getElementById('login-section');
+  const mainApp = document.getElementById('main-app');
+  const loginPassword = document.getElementById('login-password');
+  const formLogin = document.getElementById('form-login');
+
+  if (loginSection) loginSection.classList.remove('is-hidden');
+  if (mainApp) mainApp.classList.add('is-hidden');
+  if (loginPassword) loginPassword.value = '';
+  if (formLogin) formLogin.reset();
 }
 
 // ================= GALERÍA Y PRECIOS DE SALONES =================
 function cambiarFoto(urlNueva, tarjetaClickeada) {
   const imgPrincipal = document.getElementById('foto-principal');
+  if (!imgPrincipal) return;
+
   imgPrincipal.style.opacity = '0.2';
 
   setTimeout(() => {
@@ -111,18 +146,21 @@ function cambiarFoto(urlNueva, tarjetaClickeada) {
   }, 200);
 
   document.querySelectorAll('.thumb-card').forEach(card => card.classList.remove('active'));
-  tarjetaClickeada.classList.add('active');
+  if (tarjetaClickeada) tarjetaClickeada.classList.add('active');
 }
 
 function toggleCateringMenu() {
   const checkboxCatering = document.getElementById('check-catering');
   const contenedorMenu = document.getElementById('contenedor-menu-select');
+  const opcionMenu = document.getElementById('opcion-menu');
+
+  if (!checkboxCatering || !contenedorMenu) return;
 
   if (checkboxCatering.checked) {
     contenedorMenu.classList.remove('is-hidden');
   } else {
     contenedorMenu.classList.add('is-hidden');
-    document.getElementById('opcion-menu').value = "";
+    if (opcionMenu) opcionMenu.value = "";
   }
 }
 
@@ -152,50 +190,26 @@ function calcularTotal() {
 function enviarReservaReal(event, idSalon) {
   event.preventDefault();
 
-  const fechaEvento = document.getElementById('fecha-evento').value;
+  const fechaInput = document.getElementById('fecha-evento');
+  const fechaEvento = fechaInput ? fechaInput.value : '';
   
-  // Capturar los campos del formulario de forma precisa usando los inputs del evento
-  const inputsForm = event.target.querySelectorAll('input');
-  
-  // Asignamos según el orden habitual del formulario de reserva del salón:
-  // [0] es la fecha (input type="date")
-  // [1] es el checkbox del DJ (o primer checkbox)
-  // Busquemos los campos de texto recorriendo o por posición específica del formulario de contacto:
-  // Ajustamos para capturar el nombre, email, dni y teléfono de los inputs de texto visibles:
-  let nombre = "";
-  let email = "";
-  let dni = "";
-  let telefono = "";
-
-  // Buscamos dentro del formulario los inputs de tipo text, email y tel
-  const inputNombre = event.target.querySelector('input[type="text"]');
-  const inputEmail = event.target.querySelector('input[type="email"]');
-  const inputDni = event.target.querySelectorAll('input[type="text"]')[1]; // o según corresponda
-  const inputTel = event.target.querySelector('input[type="tel"]');
-
-  // O una forma más sencilla y robusta: leer por orden si los inputs están estructurados
-  // Tomamos los valores directamente de los campos del bloque 3 (Contacto del Solicitante):
-  const camposTexto = event.target.querySelectorAll('.column.is-12 input, .column.is-6 input');
-  
-  // Imprimimos en consola para depurar si hace falta, o capturamos por índice seguro:
-  // Supongamos que los inputs de texto del final son: [Nombre, DNI, Teléfono] y el email si lo agregamos.
-  // Vamos a asegurar una captura limpia pasando los datos del formulario actual:
-  const inputsVisibles = event.target.querySelectorAll('input');
-  
-  // Usemos un selector directo por clase o posición en el bloque de contacto:
   const formBox = event.target;
-  
-  // Captura segura buscando los inputs de texto dentro del form
   const txtNombre = formBox.querySelector('input[placeholder*="Juan Pérez"]');
   const txtEmail = formBox.querySelector('input[type="email"]');
   const txtDni = formBox.querySelector('input[placeholder*="Sin puntos"]');
   const txtTel = formBox.querySelector('input[type="tel"]');
+  const elementoPrecio = document.getElementById('precio-final');
+
+  let montoTotal = 180000;
+  if (elementoPrecio) {
+    montoTotal = parseInt(elementoPrecio.textContent.replace('$', '').replace(/\./g, ''), 10) || 180000;
+  }
 
   const datosReserva = {
     id_salon: idSalon,
     fecha_evento: fechaEvento,
     turno: "Noche",
-    monto_total: parseInt(document.getElementById('precio-final').textContent.replace('$', '').replace(/\./g, ''), 10) || 180000,
+    monto_total: montoTotal,
     nombre: txtNombre ? txtNombre.value : "Cliente Web",
     dni: txtDni ? txtDni.value : "Sin DNI",
     telefono: txtTel ? txtTel.value : "Sin Teléfono",
@@ -230,25 +244,27 @@ const salones = [
 ];
 
 function realizarBusqueda() {
-  const input = document.getElementById('input-buscar').value.trim();
+  const input = document.getElementById('input-buscar');
   const contenedor = document.getElementById('resultados-busqueda');
 
-  if (!contenedor) return;
+  if (!input || !contenedor) return;
+
+  const query = input.value.trim();
   contenedor.innerHTML = '';
 
-  if (!input) {
+  if (!query) {
     contenedor.innerHTML = '<div class="column is-12"><p class="has-text-warning">Por favor, ingresá un nombre o número de personas.</p></div>';
     return;
   }
 
   let resultados = [];
-  const esNumero = !isNaN(input) && input !== '';
+  const esNumero = !isNaN(query) && query !== '';
 
   if (esNumero) {
-    const cantidadInvitados = parseInt(input, 10);
+    const cantidadInvitados = parseInt(query, 10);
     resultados = salones.filter(salon => salon.capacidad >= cantidadInvitados);
   } else {
-    resultados = salones.filter(salon => salon.nombre.toLowerCase().includes(input.toLowerCase()));
+    resultados = salones.filter(salon => salon.nombre.toLowerCase().includes(query.toLowerCase()));
   }
 
   if (resultados.length === 0) {
@@ -271,8 +287,53 @@ function realizarBusqueda() {
   });
 }
 
-// Configuración inicial de eventos al cargar el DOM
+// Configuración inicial y verificación de sesión temporal al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {
+  const loginSection = document.getElementById('login-section');
+  const mainApp = document.getElementById('main-app');
+
+  // Verificación de sesión temporal (3 minutos)
+const sesionGuardada = localStorage.getItem('sesion_usuario');
+let sesionValida = false;
+
+if (sesionGuardada) {
+  const sesion = JSON.parse(sesionGuardada);
+  const ahora = new Date().getTime();
+  const tresMinutos = 3 * 60 * 1000;
+
+  if (ahora - sesion.timestamp < tresMinutos) {
+    sesionValida = true;
+    if (loginSection && mainApp) {
+      loginSection.classList.add('is-hidden');
+      mainApp.classList.remove('is-hidden');
+    }
+
+    const userBadge = document.getElementById('user-badge');
+    const adminPanel = document.getElementById('admin-panel');
+
+    if (userBadge) {
+      if (sesion.esAdmin) {
+        userBadge.textContent = 'Administrador (Admin)';
+        userBadge.className = 'tag is-danger is-medium mr-3';
+        if (adminPanel) adminPanel.classList.remove('is-hidden');
+      } else {
+        // AQUÍ ESTABA EL DETALLE: Asignamos el nombre guardado en la sesión
+        userBadge.textContent = 'Cliente: ' + sesion.nombre;
+        userBadge.className = 'tag is-success is-medium mr-3';
+        if (adminPanel) adminPanel.classList.add('is-hidden');
+      }
+    }
+  } else {
+    localStorage.removeItem('sesion_usuario');
+  }
+}
+
+  // Si NO hay sesión válida, mostrar el login y ocultar la app principal
+  if (!sesionValida && loginSection && mainApp) {
+    loginSection.classList.remove('is-hidden');
+    mainApp.classList.add('is-hidden');
+  }
+
   const inputBuscar = document.getElementById('input-buscar');
   if (inputBuscar) {
     inputBuscar.addEventListener('keyup', (event) => {
