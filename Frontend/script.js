@@ -186,18 +186,19 @@ function calcularTotal() {
   }
 }
 
-// ================= ENVÍO DE RESERVA REAL =================
-function enviarReservaReal(event, idSalon) {
+
+// ================= ENVÍO DE RESERVA CON MÉTODO DE PAGO =================
+function enviarReservaConMetodo(event, idSalon, metodoPago) {
   event.preventDefault();
 
   const fechaInput = document.getElementById('fecha-evento');
   const fechaEvento = fechaInput ? fechaInput.value : '';
   
-  const formBox = event.target;
+  const formBox = event.target.closest('form');
   const txtNombre = formBox.querySelector('input[placeholder*="Juan Pérez"]');
-  const txtEmail = formBox.querySelector('input[type="email"]');
-  const txtDni = formBox.querySelector('input[placeholder*="Sin puntos"]');
-  const txtTel = formBox.querySelector('input[type="tel"]');
+  const txtEmail = formBox.querySelector('input[type="email"]') || { value: "cliente@evaluacion.com" };
+  const txtDni = document.getElementById('dni-cliente');
+  const txtTel = document.getElementById('telefono-cliente');
   const elementoPrecio = document.getElementById('precio-final');
 
   let montoTotal = 180000;
@@ -205,15 +206,21 @@ function enviarReservaReal(event, idSalon) {
     montoTotal = parseInt(elementoPrecio.textContent.replace('$', '').replace(/\./g, ''), 10) || 180000;
   }
 
+  if (!fechaEvento || !txtDni.value || !txtTel.value) {
+    alert("Por favor completá la fecha del evento y los datos de contacto obligatorios.");
+    return;
+  }
+
   const datosReserva = {
     id_salon: idSalon,
     fecha_evento: fechaEvento,
     turno: "Noche",
     monto_total: montoTotal,
+    metodo_pago: metodoPago, // 'efectivo' o 'transferencia'
     nombre: txtNombre ? txtNombre.value : "Cliente Web",
     dni: txtDni ? txtDni.value : "Sin DNI",
     telefono: txtTel ? txtTel.value : "Sin Teléfono",
-    email: txtEmail ? txtEmail.value : "cliente@test.com"
+    email: txtEmail.value ? txtEmail.value : "cliente@evaluacion.com"
   };
 
   fetch('../Backend/procesar_reserva.php', {
@@ -223,18 +230,18 @@ function enviarReservaReal(event, idSalon) {
   })
     .then(response => response.json())
     .then(data => {
+      // Muestra el cartelito: "Su petición ha sido enviada"
+      alert(data.message);
       if (data.status === 'success') {
-        alert(data.message);
         location.reload();
-      } else {
-        alert("Error: " + data.message);
       }
     })
     .catch(error => {
       console.error('Error:', error);
-      alert('Hubo un error al procesar la reserva con el servidor.');
+      alert('Hubo un error al procesar la solicitud con el servidor.');
     });
 }
+
 
 // ================= BUSCADOR DE SALONES =================
 const salones = [
