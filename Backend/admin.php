@@ -10,13 +10,15 @@ if (isset($_GET['status'])) {
     if ($_GET['status'] == 'servicio_creado') $mensaje = "¡Servicio agregado con éxito!";
     if ($_GET['status'] == 'servicio_modificado') $mensaje = "¡Servicio modificado con éxito!";
     if ($_GET['status'] == 'servicio_eliminado') $mensaje = "¡Servicio eliminado con éxito!";
+    if ($_GET['status'] == 'personal_creado') $mensaje = "¡Personal agregado con éxito!";
+    if ($_GET['status'] == 'personal_modificado') $mensaje = "¡Personal modificado con éxito!";
+    if ($_GET['status'] == 'personal_eliminado') $mensaje = "¡Personal eliminado con éxito!";
 }
 
-// ================= SALONES (ABM) =================
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     $accion = $_POST['accion'];
 
-    // 1. Crear Salón
+    // ================= SALONES (ABM) =================
     if ($accion === 'crear_salon') {
         $nombre = trim($_POST['nombre']);
         $capacidad = intval($_POST['capacidad_maxima']);
@@ -34,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
     }
 
-    // 2. Modificar Salón
     if ($accion === 'modificar_salon') {
         $id_salon = intval($_POST['id_salon']);
         $nombre = trim($_POST['nombre']);
@@ -53,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
     }
 
-    // 3. Eliminar Salón
     if ($accion === 'eliminar_salon') {
         $id_salon = intval($_POST['id_salon']);
         try {
@@ -67,7 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     }
 
     // ================= SERVICIOS (ABM) =================
-    // 4. Crear Servicio
     if ($accion === 'crear_servicio') {
         $nombre = trim($_POST['nombre_servicio']);
         $descripcion = trim($_POST['descripcion']);
@@ -84,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
     }
 
-    // 5. Modificar Servicio
     if ($accion === 'modificar_servicio') {
         $id_servicio = intval($_POST['id_servicio']);
         $nombre = trim($_POST['nombre_servicio']);
@@ -102,7 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
     }
 
-    // 6. Eliminar Servicio
     if ($accion === 'eliminar_servicio') {
         $id_servicio = intval($_POST['id_servicio']);
         try {
@@ -114,29 +111,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $mensaje = "Error al eliminar el servicio.";
         }
     }
+
+    // ================= PERSONAL (ABM) =================
+    if ($accion === 'crear_personal') {
+        $nombre = trim($_POST['nombre']);
+        $apellido = trim($_POST['apellido']);
+        $dni_cuit = trim($_POST['dni_cuit']);
+        $telefono = trim($_POST['telefono']);
+        $email = trim($_POST['email']);
+        $tipo_personal = trim($_POST['tipo_personal']);
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO personal (nombre, apellido, dni_cuit, telefono, email, tipo_personal) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$nombre, $apellido, $dni_cuit, $telefono, $email, $tipo_personal]);
+            header("Location: admin.php?status=personal_creado");
+            exit();
+        } catch (PDOException $e) {
+            $mensaje = "Error al agregar el personal: " . $e->getMessage();
+        }
+    }
+
+    if ($accion === 'modificar_personal') {
+        $id_personal = intval($_POST['id_personal']);
+        $nombre = trim($_POST['nombre']);
+        $apellido = trim($_POST['apellido']);
+        $dni_cuit = trim($_POST['dni_cuit']);
+        $telefono = trim($_POST['telefono']);
+        $email = trim($_POST['email']);
+        $tipo_personal = trim($_POST['tipo_personal']);
+
+        try {
+            $stmt =$pdo->prepare("UPDATE personal SET nombre = ?, apellido = ?, dni_cuit = ?, telefono = ?, email = ?, tipo_personal = ? WHERE id_personal = ?");
+            $stmt->execute([$nombre, $apellido,$dni_cuit, $telefono,$email, $tipo_personal,$id_personal]);
+            header("Location: admin.php?status=personal_modificado");
+            exit();
+        } catch (PDOException $e) {$mensaje = "Error al modificar el personal: " . $e->getMessage();
+        }
+    }
+
+    if ($accion === 'eliminar_personal') {
+        $id_personal = intval($_POST['id_personal']);
+        try {
+            $stmt =$pdo->prepare("DELETE FROM personal WHERE id_personal = ?");
+            $stmt->execute([$id_personal]);
+            header("Location: admin.php?status=personal_eliminado");
+            exit();
+        } catch (PDOException $e) {$mensaje = "Error al eliminar el personal.";
+        }
+    }
 }
 
-// Obtener datos para editar Salón
+// Ediciones
 $salonEditar = null;
 if (isset($_GET['editar'])) {
-    $id_editar = intval($_GET['editar']);
-    $stmtEdit = $pdo->prepare("SELECT * FROM salon WHERE id_salon = ?");
-    $stmtEdit->execute([$id_editar]);
-    $salonEditar = $stmtEdit->fetch(PDO::FETCH_ASSOC);
+    $stmtEdit =$pdo->prepare("SELECT * FROM salon WHERE id_salon = ?");
+    $stmtEdit->execute([intval($_GET['editar'])]);
+    $salonEditar =$stmtEdit->fetch(PDO::FETCH_ASSOC);
 }
 
-// Obtener datos para editar Servicio
 $servicioEditar = null;
 if (isset($_GET['editar_servicio'])) {
-    $id_editar_s = intval($_GET['editar_servicio']);
-    $stmtEditS = $pdo->prepare("SELECT * FROM servicio WHERE id_servicio = ?");
-    $stmtEditS->execute([$id_editar_s]);
-    $servicioEditar = $stmtEditS->fetch(PDO::FETCH_ASSOC);
+    $stmtEditS =$pdo->prepare("SELECT * FROM servicio WHERE id_servicio = ?");
+    $stmtEditS->execute([intval($_GET['editar_servicio'])]);
+    $servicioEditar =$stmtEditS->fetch(PDO::FETCH_ASSOC);
 }
 
-// Listas actualizadas
-$salones = $pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
-$servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
+$personalEditar = null;
+if (isset($_GET['editar_personal'])) {
+    $stmtEditP =$pdo->prepare("SELECT * FROM personal WHERE id_personal = ?");
+    $stmtEditP->execute([intval($_GET['editar_personal'])]);
+    $personalEditar =$stmtEditP->fetch(PDO::FETCH_ASSOC);
+}
+
+// Listas
+$salones =$pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
+$servicios =$pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
+$personalList =$pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -178,15 +228,15 @@ $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
       <!-- PESTAÑAS DE NAVEGACIÓN -->
       <div class="tabs is-boxed is-centered" id="admin-tabs">
         <ul>
-          <li class="<?php echo $servicioEditar ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
+          <li class="<?php echo ($servicioEditar ||$personalEditar) ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
           <li class="<?php echo $servicioEditar ? 'is-active' : ''; ?>" data-target="abm-servicios"><a><i class="fas fa-concierge-bell mr-2"></i> Servicios</a></li>
-          <li data-target="abm-personal"><a><i class="fas fa-users-cog mr-2"></i> Personal</a></li>
+          <li class="<?php echo $personalEditar ? 'is-active' : ''; ?>" data-target="abm-personal"><a><i class="fas fa-users-cog mr-2"></i> Personal</a></li>
         </ul>
       </div>
 
       <!-- SECCIÓN 1: ABM SALONES -->
-      <div id="abm-salones" class="abm-content box <?php echo $servicioEditar ? 'is-hidden' : ''; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2> <br>
+      <div id="abm-salones" class="abm-content box <?php echo ($servicioEditar ||$personalEditar) ? 'is-hidden' : ''; ?>">
+        <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2>
         <p class="subtitle is-6">Control de altas, modificaciones y bajas de espacios.</p>
 
         <form method="POST" class="box mb-5 has-background-white-ter">
@@ -255,7 +305,7 @@ $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
               </tr>
             </thead>
             <tbody>
-              <?php foreach ($salones as $salon): ?>
+              <?php foreach ($salones as$salon): ?>
                 <tr>
                   <td><?php echo $salon['id_salon']; ?></td>
                   <td><strong><?php echo htmlspecialchars($salon['nombre']); ?></strong></td>
@@ -280,7 +330,7 @@ $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
 
       <!-- SECCIÓN 2: ABM SERVICIOS -->
       <div id="abm-servicios" class="abm-content box <?php echo $servicioEditar ? '' : 'is-hidden'; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Servicios Adicionales</h2> <br>
+        <h2 class="title is-4 has-text-warning-dark">Administrar Servicios Adicionales</h2>
         <p class="subtitle is-6">Controlá los precios y detalles de catering, DJ, decoración y más.</p>
 
         <form method="POST" class="box mb-5 has-background-white-ter">
@@ -343,7 +393,7 @@ $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
             </thead>
             <tbody>
               <?php if (count($servicios) > 0): ?>
-                <?php foreach ($servicios as $serv): ?>
+                <?php foreach ($servicios as$serv): ?>
                   <tr>
                     <td><?php echo $serv['id_servicio']; ?></td>
                     <td><strong><?php echo htmlspecialchars($serv['nombre_servicio']); ?></strong></td>
@@ -371,29 +421,51 @@ $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
       </div>
 
       <!-- SECCIÓN 3: ABM PERSONAL -->
-      <div id="abm-personal" class="abm-content box is-hidden">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Personal</h2> <br>
-        <p class="subtitle is-6">Gestioná los empleados y colaboradores asignados a los eventos.</p>
-        <div class="notification is-info is-light">Próximamente conectaremos este ABM.</div>
-      </div>
+      <div id="abm-personal" class="abm-content box <?php echo $personalEditar ? '' : 'is-hidden'; ?>">
+        <h2 class="title is-4 has-text-warning-dark">Administrar Personal</h2>
+        <p class="subtitle is-6">Gestioná los empleados, mozos, técnicos y coordinadores del salón.</p>
 
-    </div>
-  </section>
+        <form method="POST" class="box mb-5 has-background-white-ter">
+          <input type="hidden" name="accion" value="<?php echo $personalEditar ? 'modificar_personal' : 'crear_personal'; ?>">
+          <?php if ($personalEditar): ?>
+            <input type="hidden" name="id_personal" value="<?php echo $personalEditar['id_personal']; ?>">
+            <h3 class="title is-5 mb-3 has-text-info">Modificar Personal (ID: <?php echo $personalEditar['id_personal']; ?>)</h3>
+          <?php else: ?>
+            <h3 class="title is-5 mb-3">Agregar Nuevo Personal</h3>
+          <?php endif; ?>
 
-  <!-- SCRIPT PARA CAMBIAR ENTRE PESTAÑAS -->
-  <script>
-    document.querySelectorAll('#admin-tabs li').forEach(tab => {
-      tab.addEventListener('click', function() {
-        document.querySelectorAll('#admin-tabs li').forEach(item => item.classList.remove('is-active'));
-        this.classList.add('is-active');
-
-        const target = this.getAttribute('data-target');
-        document.querySelectorAll('.abm-content').forEach(content => {
-          content.classList.add('is-hidden');
-        });
-        document.getElementById(target).classList.remove('is-hidden');
-      });
-    });
-  </script>
-</body>
-</html>
+          <div class="columns is-multiline">
+            <div class="column is-4">
+              <div class="field">
+                <label class="label">Nombre</label>
+                <input class="input" type="text" name="nombre" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['nombre']) : ''; ?>" placeholder="Ej: Carlos">
+              </div>
+            </div>
+            <div class="column is-4">
+              <div class="field">
+                <label class="label">Apellido</label>
+                <input class="input" type="text" name="apellido" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['apellido']) : ''; ?>" placeholder="Ej: Gómez">
+              </div>
+            </div>
+            <div class="column is-4">
+              <div class="field">
+                <label class="label">DNI / CUIT</label>
+                <input class="input" type="text" name="dni_cuit" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['dni_cuit']) : ''; ?>" placeholder="Ej: 20-33445566-9">
+              </div>
+            </div>
+            <div class="column is-4">
+              <div class="field">
+                <label class="label">Teléfono</label>
+                <input class="input" type="text" name="telefono" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['telefono']) : ''; ?>" placeholder="Ej: 2914556677">
+              </div>
+            </div>
+            <div class="column is-4">
+              <div class="field">
+                <label class="label">Email</label>
+                <input class="input" type="email" name="email" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['email']) : ''; ?>" placeholder="Ej: carlos@email.com">
+              </div>
+            </div>
+            <div class="column is-4">
+              <div class="field">
+                <label class="label">Tipo / Rol de Personal</label>
+                <input class="input"
