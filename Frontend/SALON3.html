@@ -261,10 +261,19 @@
                 </div>
               </div>
             </div>
+            <!-- BOTONES DE PAGO Y ENVÍO DE SOLICITUD -->
             <div class="column is-12 mt-3">
-              <button type="submit" class="button is-warning is-medium is-fullwidth has-text-weight-bold shadow">
-                Enviar Solicitud Demo
-              </button>
+              <label class="label has-text-centered mb-3">Seleccione el método de pago:</label>
+              <div class="buttons are-medium is-centered">
+                <button type="button" onclick="enviarReservaConMetodo(event, 3, 'efectivo')"
+                  class="button is-success has-text-weight-bold shadow">
+                  <i class="fas fa-money-bill-wave mr-2"></i> Pagar en Efectivo
+                </button>
+                <button type="button" onclick="enviarReservaConMetodo(event, 3, 'transferencia')"
+                  class="button is-info has-text-weight-bold shadow">
+                  <i class="fas fa-exchange-alt mr-2"></i> Pagar por Transferencia
+                </button>
+              </div>
             </div>
           </div>
 

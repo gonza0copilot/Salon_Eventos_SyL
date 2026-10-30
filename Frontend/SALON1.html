@@ -256,15 +256,25 @@
               <div class="field">
                 <label class="label">Teléfono de Contacto</label>
                 <div class="control">
-                  <input class="input" type="tel" id="telefono-cliente" placeholder="Ej: 291 1234567" inputmode="numeric"
-                    pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                  <input class="input" type="tel" id="telefono-cliente" placeholder="Ej: 291 1234567"
+                    inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    required>
                 </div>
               </div>
             </div>
+            <!-- BOTONES DE PAGO Y ENVÍO DE SOLICITUD -->
             <div class="column is-12 mt-3">
-              <button type="submit" class="button is-warning is-medium is-fullwidth has-text-weight-bold shadow">
-                Enviar Solicitud Demo
-              </button>
+              <label class="label has-text-centered mb-3">Seleccione el método de pago:</label>
+              <div class="buttons are-medium is-centered">
+                <button type="button" onclick="enviarReservaConMetodo(event, 1, 'efectivo')"
+                  class="button is-success has-text-weight-bold shadow">
+                  <i class="fas fa-money-bill-wave mr-2"></i> Pagar en Efectivo
+                </button>
+                <button type="button" onclick="enviarReservaConMetodo(event, 1, 'transferencia')"
+                  class="button is-info has-text-weight-bold shadow">
+                  <i class="fas fa-exchange-alt mr-2"></i> Pagar por Transferencia
+                </button>
+              </div>
             </div>
           </div>
 
