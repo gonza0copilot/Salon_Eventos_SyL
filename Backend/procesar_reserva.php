@@ -22,7 +22,7 @@ if ($data) {
     }
 
     try {
-        // Validación: Solo permitir una reserva por salón por día
+        // Validación: Solo permitir una reserva por salón por fecha
         $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM reserva WHERE id_salon = ? AND fecha_evento = ? AND estado != 'Rechazada'");
         $stmtCheck->execute([$idSalon, $fechaEvento]);
         if ($stmtCheck->fetchColumn() > 0) {
@@ -51,14 +51,14 @@ if ($data) {
         $horaFin = ($turno === 'Tarde') ? '19:00:00' : '04:00:00';
         $cantidadInvitados = 100; 
 
-        // 1. Insertar la reserva con estado inicial "Pendiente" de aprobación del admin
+        // 1. Insertar la reserva con estado inicial "Pendiente"
         $sqlReserva = "INSERT INTO reserva (id_cliente, id_salon, fecha_evento, hora_inicio, hora_fin, cantidad_invitados, monto_total, estado) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente')";
         $stmtReserva = $pdo->prepare($sqlReserva);
         $stmtReserva->execute([$idCliente, $idSalon, $fechaEvento, $horaInicio, $horaFin, $cantidadInvitados, $montoTotal]);
         $idReserva = $pdo->lastInsertId();
 
-        // 2. Registrar el pago asociado con el atributo 'estado' (Pendiente / Aprobado / etc.)
-        $sqlPago = "INSERT INTO pago (id_reserva, monto, metodo_pago, estado) VALUES (?, ?, ?, 'Pendiente')";
+        // 2. Registrar el pago incluyendo NOW() para la fecha obligatoria y el método de pago
+        $sqlPago = "INSERT INTO pago (id_reserva, monto, fecha_pago, metodo_pago, estado) VALUES (?, ?, NOW(), ?, 'Pendiente')";
         $stmtPago = $pdo->prepare($sqlPago);
         $stmtPago->execute([$idReserva, $montoTotal, $metodoPago]);
 
