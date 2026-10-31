@@ -189,6 +189,96 @@ if (isset($_GET['editar_personal'])) {
 $salones = $pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
 $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
 $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
+// Procesar Aceptación o Rechazo por parte del Administrador
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion_reserva'])) {
+        $idReserva = intval($_POST['id_reserva']);
+        $nuevaAccion = $_POST['accion_reserva']; // 'Aprobada' o 'Rechazada'
+
+        // Actualizar estado en la tabla reserva
+        $stmtUpd = $pdo->prepare("UPDATE reserva SET estado = ? WHERE id_reserva = ?");
+        $stmtUpd->execute([$nuevaAccion, $idReserva]);
+        
+        // Actualizar estado en la tabla pago
+        $stmtPagoUpd = $pdo->prepare("UPDATE pago SET estado = ? WHERE id_reserva = ?");
+        $stmtPagoUpd->execute([$nuevaAccion, $idReserva]);
+
+        header("Location: admin.php?status=reserva_actualizada");
+        exit();
+    }
+
+    // Obtener listado completo de reservas con datos relacionados
+    $listadoReservas = $pdo->query("SELECT r.*, s.nombre as salon_nombre, c.nombre as cliente_nombre, c.telefono, p.metodo_pago, p.estado as estado_pago 
+                                    FROM reserva r 
+                                    JOIN salon s ON r.id_salon = s.id_salon 
+                                    JOIN cliente c ON r.id_cliente = c.id_cliente 
+                                    LEFT JOIN pago p ON r.id_reserva = p.id_reserva 
+                                    ORDER BY r.id_reserva DESC")->fetchAll(PDO::FETCH_ASSOC);
+    ?>
+
+    <!-- SECCIÓN 4: GESTIÓN DE RESERVAS (ADMINISTRADOR) -->
+    <div id="abm-reservas" class="abm-content box is-hidden">
+      <h2 class="title is-4 has-text-warning-dark">Notificaciones de Solicitudes de Reserva</h2><br>
+      <p class="subtitle is-6">Revisá las peticiones de los clientes, qué salón solicitaron, cuándo y tomá acción.</p>
+
+      <div class="table-container">
+        <table class="table is-fullwidth is-striped is-hoverable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente / Teléfono</th>
+              <th>Salón Solicitado</th>
+              <th>Fecha del Evento</th>
+              <th>Método de Pago</th>
+              <th>Estado</th>
+              <th class="has-text-centered">Acciones (Aceptar / Rechazar)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (count($listadoReservas) > 0): ?>
+              <?php foreach ($listadoReservas as $res): ?>
+                <tr>
+                  <td><?php echo $res['id_reserva']; ?></td>
+                  <td><strong><?php echo htmlspecialchars($res['cliente_nombre']); ?></strong><br><small><?php echo htmlspecialchars($res['telefono']); ?></small></td>
+                  <td><?php echo htmlspecialchars($res['salon_nombre']); ?></td>
+                  <td><?php echo htmlspecialchars($res['fecha_evento']); ?></td>
+                  <td><span class="tag is-light"><?php echo ucfirst($res['metodo_pago'] ?? 'efectivo'); ?></span></td>
+                  <td>
+                    <span class="tag <?php echo ($res['estado'] == 'Aprobada') ? 'is-success' : (($res['estado'] == 'Rechazada') ? 'is-danger' : 'is-warning'); ?>">
+                      <?php echo $res['estado']; ?>
+                    </span>
+                  </td>
+                  <td class="has-text-centered">
+                    <?php if ($res['estado'] == 'Pendiente'): ?>
+                      <form method="POST" style="display:inline;">
+                        <input type="hidden" name="id_reserva" value="<?php echo $res['id_reserva']; ?>">
+                        <button type="submit" name="accion_reserva" value="Aprobada" class="button is-small is-success mr-1" title="Aceptar Reserva">
+                          <i class="fas fa-check mr-1"></i> Aceptar
+                        </button>
+                        <button type="submit" name="accion_reserva" value="Rechazada" class="button is-small is-danger" title="Rechazar Reserva">
+                          <i class="fas fa-times mr-1"></i> Rechazar
+                        </button>
+                      </form>
+                    <?php else: ?>
+                      <span class="tag is-light">Procesada</span>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <tr>
+                <td colspan="7" class="has-text-centered">No hay solicitudes de reserva registradas.</td>
+              </tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -233,6 +323,7 @@ $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC
           <li class="<?php echo ($servicioEditar || $personalEditar) ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
           <li class="<?php echo $servicioEditar ? 'is-active' : ''; ?>" data-target="abm-servicios"><a><i class="fas fa-concierge-bell mr-2"></i> Servicios</a></li>
           <li class="<?php echo $personalEditar ? 'is-active' : ''; ?>" data-target="abm-personal"><a><i class="fas fa-users-cog mr-2"></i> Personal</a></li>
+          <li data-target="abm-reservas"><a><i class="fas fa-bell mr-2"></i> Solicitudes de Reserva</a></li>
         </ul>
       </div>
 
