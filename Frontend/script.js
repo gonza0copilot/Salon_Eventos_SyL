@@ -191,12 +191,15 @@ function calcularTotal() {
 function enviarReservaConMetodo(event, idSalon, metodoPago) {
   event.preventDefault();
 
+  // Usamos event.currentTarget para asegurar que capturemos el botón sin importar si hicieron clic en el texto o en el icono
+  const boton = event.currentTarget;
+  const formBox = boton.closest('form');
+
   const fechaInput = document.getElementById('fecha-evento');
   const fechaEvento = fechaInput ? fechaInput.value : '';
   
-  const formBox = event.target.closest('form');
-  const txtNombre = formBox.querySelector('input[placeholder*="Juan Pérez"]');
-  const txtEmail = formBox.querySelector('input[type="email"]') || { value: "cliente@evaluacion.com" };
+  // Captura segura de los campos por ID o selectores del formulario
+  const txtNombre = formBox ? formBox.querySelector('input[type="text"]') : null;
   const txtDni = document.getElementById('dni-cliente');
   const txtTel = document.getElementById('telefono-cliente');
   const elementoPrecio = document.getElementById('precio-final');
@@ -206,23 +209,25 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     montoTotal = parseInt(elementoPrecio.textContent.replace('$', '').replace(/\./g, ''), 10) || 180000;
   }
 
-  if (!fechaEvento || !txtDni.value || !txtTel.value) {
-    alert("Por favor completá la fecha del evento y los datos de contacto obligatorios.");
+  // Validación rápida en el cliente antes de enviar
+  if (!fechaEvento || !txtDni || !txtDni.value || !txtTel || !txtTel.value) {
+    alert("Por favor completá la fecha del evento, DNI y teléfono obligatorios.");
     return;
   }
 
   const datosReserva = {
     id_salon: idSalon,
     fecha_evento: fechaEvento,
-    turno: "Noche",
+    turno: "Noche", // O el valor que corresponda según tu selector de turno
     monto_total: montoTotal,
     metodo_pago: metodoPago, // 'efectivo' o 'transferencia'
     nombre: txtNombre ? txtNombre.value : "Cliente Web",
-    dni: txtDni ? txtDni.value : "Sin DNI",
-    telefono: txtTel ? txtTel.value : "Sin Teléfono",
-    email: txtEmail.value ? txtEmail.value : "cliente@evaluacion.com"
+    dni: txtDni.value,
+    telefono: txtTel.value,
+    email: "cliente@evaluacion.com" // Email por defecto para identificar la solicitud
   };
 
+  // Petición al backend
   fetch('../Backend/procesar_reserva.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -230,15 +235,15 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
   })
     .then(response => response.json())
     .then(data => {
-      // Muestra el cartelito: "Su petición ha sido enviada"
+      // Muestra el cartelito de éxito o error devuelto por PHP
       alert(data.message);
       if (data.status === 'success') {
         location.reload();
       }
     })
     .catch(error => {
-      console.error('Error:', error);
-      alert('Hubo un error al procesar la solicitud con el servidor.');
+      console.error('Error en fetch:', error);
+      alert('Hubo un error de conexión con el servidor.');
     });
 }
 
