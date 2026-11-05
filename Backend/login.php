@@ -30,7 +30,7 @@ try {
             ]);
             exit();
         } else {
-            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta."]);
+            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta"]);
             exit();
         }
     }
