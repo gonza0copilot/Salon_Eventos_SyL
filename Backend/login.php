@@ -22,15 +22,20 @@ try {
     if ($usuario) {
         // Verificar contraseña del administrador
         if (password_verify($password, $usuario['contrasena'])) {
+            // Guardar los datos del usuario en la sesión de PHP
+            $_SESSION['usuario'] = $usuario['email'];
+            $_SESSION['rol'] = $usuario['rol']; // 'Administrador'
+            $_SESSION['nombre'] = $usuario['nombre'];
+
             echo json_encode([
                 "status" => "success",
                 "message" => "¡Bienvenido, Administrador " . $usuario['nombre'] . "!",
                 "nombre" => $usuario['nombre'],
-                "rol" => "admin"
+                "rol" => $usuario['rol'] // Enviamos el rol real devuelto por la BD
             ]);
             exit();
         } else {
-            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta"]);
+            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta."]);
             exit();
         }
     }
