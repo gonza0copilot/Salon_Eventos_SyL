@@ -2,6 +2,12 @@
 session_start();
 require_once 'conexion.php';
 
+// Validar que exista una sesión activa y que sea estrictamente Administrador
+if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'Administrador') {
+    header("Location: ../frontend/index.html");
+    exit();
+}
+
 $mensaje = "";
 if (isset($_GET['status'])) {
     if ($_GET['status'] == 'creado') $mensaje = "¡Salón agregado con éxito!";
