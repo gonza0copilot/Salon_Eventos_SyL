@@ -9,7 +9,7 @@ if (authTabs.length > 0) {
       const tab = this.getAttribute('data-tab');
       const formLogin = document.getElementById('form-login');
       const formRegister = document.getElementById('form-register');
-      
+
       if (formLogin && formRegister) {
         if (tab === 'login') {
           formLogin.classList.remove('is-hidden');
@@ -46,9 +46,11 @@ function manejarLogin(event) {
       if (data.status === 'success') {
         alert(data.message);
 
-        const esAdmin = (password === 'admin123');
+        // Verificación segura basada en el rol que devuelve la base de datos
+        const esAdmin = (data.rol === 'Administrador');
         const datosSesion = {
           nombre: data.nombre,
+          rol: data.rol,
           esAdmin: esAdmin,
           timestamp: new Date().getTime()
         };
@@ -73,6 +75,8 @@ function manejarLogin(event) {
             if (adminPanel) adminPanel.classList.add('is-hidden');
           }
         }
+
+
       } else {
         alert("Error: " + data.message);
       }
@@ -197,7 +201,7 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
 
   const fechaInput = document.getElementById('fecha-evento');
   const fechaEvento = fechaInput ? fechaInput.value : '';
-  
+
   // Captura segura de los campos por ID o selectores del formulario
   const txtNombre = formBox ? formBox.querySelector('input[type="text"]') : null;
   const txtDni = document.getElementById('dni-cliente');
@@ -305,40 +309,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const mainApp = document.getElementById('main-app');
 
   // Verificación de sesión temporal (3 minutos)
-const sesionGuardada = localStorage.getItem('sesion_usuario');
-let sesionValida = false;
+  const sesionGuardada = localStorage.getItem('sesion_usuario');
+  let sesionValida = false;
 
-if (sesionGuardada) {
-  const sesion = JSON.parse(sesionGuardada);
-  const ahora = new Date().getTime();
-  const tresMinutos = 3 * 60 * 1000;
+  if (sesionGuardada) {
+    const sesion = JSON.parse(sesionGuardada);
+    const ahora = new Date().getTime();
+    const tresMinutos = 3 * 60 * 1000;
 
-  if (ahora - sesion.timestamp < tresMinutos) {
-    sesionValida = true;
-    if (loginSection && mainApp) {
-      loginSection.classList.add('is-hidden');
-      mainApp.classList.remove('is-hidden');
-    }
-
-    const userBadge = document.getElementById('user-badge');
-    const adminPanel = document.getElementById('admin-panel');
-
-    if (userBadge) {
-      if (sesion.esAdmin) {
-        userBadge.textContent = 'Administrador (Admin)';
-        userBadge.className = 'tag is-danger is-medium mr-3';
-        if (adminPanel) adminPanel.classList.remove('is-hidden');
-      } else {
-        // AQUÍ ESTABA EL DETALLE: Asignamos el nombre guardado en la sesión
-        userBadge.textContent = 'Cliente: ' + sesion.nombre;
-        userBadge.className = 'tag is-success is-medium mr-3';
-        if (adminPanel) adminPanel.classList.add('is-hidden');
+    if (ahora - sesion.timestamp < tresMinutos) {
+      sesionValida = true;
+      if (loginSection && mainApp) {
+        loginSection.classList.add('is-hidden');
+        mainApp.classList.remove('is-hidden');
       }
+
+      const userBadge = document.getElementById('user-badge');
+      const adminPanel = document.getElementById('admin-panel');
+
+      if (userBadge) {
+        if (sesion.esAdmin) {
+          userBadge.textContent = 'Administrador (Admin)';
+          userBadge.className = 'tag is-danger is-medium mr-3';
+          if (adminPanel) adminPanel.classList.remove('is-hidden');
+        } else {
+          // AQUÍ ESTABA EL DETALLE: Asignamos el nombre guardado en la sesión
+          userBadge.textContent = 'Cliente: ' + sesion.nombre;
+          userBadge.className = 'tag is-success is-medium mr-3';
+          if (adminPanel) adminPanel.classList.add('is-hidden');
+        }
+      }
+    } else {
+      localStorage.removeItem('sesion_usuario');
     }
-  } else {
-    localStorage.removeItem('sesion_usuario');
   }
-}
 
   // Si NO hay sesión válida, mostrar el login y ocultar la app principal
   if (!sesionValida && loginSection && mainApp) {
