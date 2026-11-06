@@ -30,7 +30,7 @@ try {
             LEFT JOIN servicio srv ON drs.id_servicio = srv.id_servicio
             WHERE MONTH(r.fecha_evento) = ? 
               AND YEAR(r.fecha_evento) = ?
-              AND r.estado IN ('Confirmada', 'Pagada Totalmente')
+              AND r.estado IN ('Aprobada', 'Pendiente')
             GROUP BY r.id_reserva
             ORDER BY r.fecha_evento ASC, r.hora_inicio ASC";
 
