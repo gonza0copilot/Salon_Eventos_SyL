@@ -50,6 +50,7 @@ function manejarLogin(event) {
         const esAdmin = (data.rol === 'Administrador');
         const datosSesion = {
           nombre: data.nombre,
+          email: email, // <--- GUARDAMOS EL EMAIL REAL DEL USUARIO LOGUEADO
           rol: data.rol,
           esAdmin: esAdmin,
           timestamp: new Date().getTime()
@@ -195,14 +196,12 @@ function calcularTotal() {
 function enviarReservaConMetodo(event, idSalon, metodoPago) {
   event.preventDefault();
 
-  // Usamos event.currentTarget para asegurar que capturemos el botón sin importar si hicieron clic en el texto o en el icono
   const boton = event.currentTarget;
   const formBox = boton.closest('form');
 
   const fechaInput = document.getElementById('fecha-evento');
   const fechaEvento = fechaInput ? fechaInput.value : '';
 
-  // Captura segura de los campos por ID o selectores del formulario
   const txtNombre = formBox ? formBox.querySelector('input[type="text"]') : null;
   const txtDni = document.getElementById('dni-cliente');
   const txtTel = document.getElementById('telefono-cliente');
@@ -213,25 +212,34 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     montoTotal = parseInt(elementoPrecio.textContent.replace('$', '').replace(/\./g, ''), 10) || 180000;
   }
 
-  // Validación rápida en el cliente antes de enviar
   if (!fechaEvento || !txtDni || !txtDni.value || !txtTel || !txtTel.value) {
     alert("Por favor completá la fecha del evento, DNI y teléfono obligatorios.");
     return;
   }
 
+  // RECUPERAR EL EMAIL DEL USUARIO LOGUEADO DESDE LOCALSTORAGE
+  const sesionGuardada = localStorage.getItem('sesion_usuario');
+  let emailCliente = "cliente@evaluacion.com"; // Resguardo por defecto si no hay sesión
+  
+  if (sesionGuardada) {
+    const sesion = JSON.parse(sesionGuardada);
+    if (sesion.email) {
+      emailCliente = sesion.email;
+    }
+  }
+
   const datosReserva = {
     id_salon: idSalon,
     fecha_evento: fechaEvento,
-    turno: "Noche", // O el valor que corresponda según tu selector de turno
+    turno: "Noche", 
     monto_total: montoTotal,
-    metodo_pago: metodoPago, // 'efectivo' o 'transferencia'
+    metodo_pago: metodoPago, 
     nombre: txtNombre ? txtNombre.value : "Cliente Web",
     dni: txtDni.value,
     telefono: txtTel.value,
-    email: "cliente@evaluacion.com" // Email por defecto para identificar la solicitud
+    email: emailCliente // <--- SE ENVÍA EL CORREO REAL DEL CLIENTE AUTENTICADO
   };
 
-  // Petición al backend
   fetch('../Backend/procesar_reserva.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -239,7 +247,6 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
   })
     .then(response => response.json())
     .then(data => {
-      // Muestra el cartelito de éxito o error devuelto por PHP
       alert(data.message);
       if (data.status === 'success') {
         location.reload();
@@ -333,7 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
           userBadge.className = 'tag is-danger is-medium mr-3';
           if (adminPanel) adminPanel.classList.remove('is-hidden');
         } else {
-          // AQUÍ ESTABA EL DETALLE: Asignamos el nombre guardado en la sesión
           userBadge.textContent = 'Cliente: ' + sesion.nombre;
           userBadge.className = 'tag is-success is-medium mr-3';
           if (adminPanel) adminPanel.classList.add('is-hidden');
@@ -344,7 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Si NO hay sesión válida, mostrar el login y ocultar la app principal
   if (!sesionValida && loginSection && mainApp) {
     loginSection.classList.remove('is-hidden');
     mainApp.classList.add('is-hidden');
