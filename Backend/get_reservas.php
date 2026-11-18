@@ -1,60 +1,95 @@
 <?php
-// Permitir respuestas en formato JSON
 header("Content-Type: application/json; charset=utf-8");
-
-// Incluir el archivo de conexión creado anteriormente
 require_once "conexion.php";
 
-// Capturar los parámetros enviados desde la URL (Ej: get_reservas.php?mes=9&anio=2026)
-// Si no se envían, toma por defecto el mes y año actuales
-$mes = isset($_GET['mes']) ? (int)$_GET['mes'] : date('m');
-$anio = isset($_GET['anio']) ? (int)$_GET['anio'] : date('Y');
+$data = json_decode(file_get_contents("php://input"), true);
 
-try {
-    // Consulta SQL con marcadores de posición (?) para evitar inyección SQL
-    $sql = "SELECT 
-                r.id_reserva,
-                r.fecha_evento,
-                r.hora_inicio,
-                r.hora_fin,
-                s.nombre AS salon,
-                CONCAT(c.nombre, ' ', c.apellido) AS cliente,
-                c.telefono,
-                r.cantidad_invitados,
-                r.estado,
-                COALESCE(GROUP_CONCAT(srv.nombre_servicio SEPARATOR ', '), 'Sin adicionales') AS servicios_contratados
-            FROM reserva r
-            INNER JOIN cliente c ON r.id_cliente = c.id_cliente
-            INNER JOIN salon s ON r.id_salon = s.id_salon
-            LEFT JOIN detalle_reserva_servicio drs ON r.id_reserva = drs.id_reserva
-            LEFT JOIN servicio srv ON drs.id_servicio = srv.id_servicio
-            WHERE MONTH(r.fecha_evento) = ? 
-              AND YEAR(r.fecha_evento) = ?
-              AND r.estado IN ('Aprobada', 'Pendiente')
-            GROUP BY r.id_reserva
-            ORDER BY r.fecha_evento ASC, r.hora_inicio ASC";
-
-    // Preparar y ejecutar la consulta pasando los valores de forma segura
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$mes, $anio]);
+if ($data) {
+    $emailCliente = trim($data['email'] ?? '');
+    $idSalon = $data['id_salon'] ?? 1;
+    $fechaEvento = $data['fecha_evento'] ?? '';
+    $turno = $data['turno'] ?? '';
+    $montoTotal = $data['monto_total'] ?? 0;
+    $metodoPago = trim($data['metodo_pago'] ?? 'efectivo'); // 'efectivo' o 'transferencia'
+    $servicios = $data['servicios'] ?? [];
     
-    // Obtener todos los registros coincidentes
-    $reservas = $stmt->fetchAll();
+    $nombre = trim($data['nombre'] ?? '');
+    $dni = trim($data['dni'] ?? '');
+    $telefono = trim($data['telefono'] ?? '');
 
-    // Responder con los datos codificados en JSON
-    echo json_encode([
-        "status" => "success",
-        "mes_consultado" => $mes,
-        "anio_consultado" => $anio,
-        "total_registros" => count($reservas),
-        "data" => $reservas
-    ]);
+    if (empty($emailCliente) || empty($fechaEvento)) {
+        echo json_encode(["status" => "error", "message" => "Faltan datos obligatorios para la reserva."]);
+        exit();
+    }
 
-} catch (\PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        "status" => "error",
-        "message" => "Error al consultar reservas: " . $e->getMessage()
-    ]);
+    try {
+        // Validación: Solo permitir una reserva por salón por fecha
+        $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM reserva WHERE id_salon = ? AND fecha_evento = ? AND estado != 'Rechazada'");
+        $stmtCheck->execute([$idSalon, $fechaEvento]);
+        if ($stmtCheck->fetchColumn() > 0) {
+            echo json_encode([
+                "status" => "error", 
+                "message" => "Lo sentimos, este salón ya se encuentra reservado o con solicitud pendiente para esa fecha."
+            ]);
+            exit();
+        }
+
+        // Verificar o registrar cliente
+        $stmtCliente = $pdo->prepare("SELECT id_cliente FROM cliente WHERE email = ?");
+        $stmtCliente->execute([$emailCliente]);
+        $cliente = $stmtCliente->fetch();
+
+        if ($cliente) {
+            $idCliente = $cliente['id_cliente'];
+        } else {
+            $passTemp = password_hash("123456", PASSWORD_DEFAULT);
+            $stmtInsertCliente = $pdo->prepare("INSERT INTO cliente (nombre, apellido, dni_cuit, telefono, email, contrasena) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmtInsertCliente->execute([$nombre, $nombre, $dni, $telefono, $emailCliente, $passTemp]);
+            $idCliente = $pdo->lastInsertId();
+        }
+
+        $horaInicio = ($turno === 'Tarde') ? '12:00:00' : '20:00:00';
+        $horaFin = ($turno === 'Tarde') ? '19:00:00' : '04:00:00';
+        $cantidadInvitados = 100; 
+
+        // 1. Insertar la reserva con estado inicial "Pendiente"
+        $sqlReserva = "INSERT INTO reserva (id_cliente, id_salon, fecha_evento, hora_inicio, hora_fin, cantidad_invitados, monto_total, estado) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente')";
+        $stmtReserva = $pdo->prepare($sqlReserva);
+        $stmtReserva->execute([$idCliente, $idSalon, $fechaEvento, $horaInicio, $horaFin, $cantidadInvitados, $montoTotal]);
+        $idReserva = $pdo->lastInsertId();
+
+        // 2. Registrar el pago incluyendo NOW() para la fecha obligatoria y el método de pago
+        $sqlPago = "INSERT INTO pago (id_reserva, monto, fecha_pago, metodo_pago, estado) VALUES (?, ?, NOW(), ?, 'Pendiente')";
+        $stmtPago = $pdo->prepare($sqlPago);
+        $stmtPago->execute([$idReserva, $montoTotal, $metodoPago]);
+
+        // 3. Registrar servicios adicionales elegidos en detalle_reserva_servicio
+        if (!empty($servicios) && is_array($servicios)) {
+            $stmtPrecioServ = $pdo->prepare("SELECT precio_base FROM servicio WHERE id_servicio = ?");
+            $stmtDetalle = $pdo->prepare("INSERT INTO detalle_reserva_servicio (id_reserva, id_servicio, cantidad, precio_final) VALUES (?, ?, 1, ?)");
+
+            foreach ($servicios as $idServicio) {
+                $idServicioLimpio = intval($idServicio);
+                if ($idServicioLimpio > 0) {
+                    $stmtPrecioServ->execute([$idServicioLimpio]);
+                    $precioServ = $stmtPrecioServ->fetchColumn();
+
+                    if ($precioServ !== false) {
+                        $stmtDetalle->execute([$idReserva, $idServicioLimpio, $precioServ]);
+                    }
+                }
+            }
+        }
+
+        echo json_encode([
+            "status" => "success", 
+            "message" => "¡Su petición ha sido enviada con éxito! El administrador la revisará a la brevedad."
+        ]);
+
+    } catch (\PDOException $e) {
+        echo json_encode(["status" => "error", "message" => "Error al procesar la solicitud: " . $e->getMessage()]);
+    }
+} else {
+    echo json_encode(["status" => "error", "message" => "No se recibieron datos."]);
 }
 ?>
