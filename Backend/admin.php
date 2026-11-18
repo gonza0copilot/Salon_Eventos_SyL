@@ -19,152 +19,173 @@ if (isset($_GET['status'])) {
     if ($_GET['status'] == 'personal_creado') $mensaje = "¡Personal agregado con éxito!";
     if ($_GET['status'] == 'personal_modificado') $mensaje = "¡Personal modificado con éxito!";
     if ($_GET['status'] == 'personal_eliminado') $mensaje = "¡Personal eliminado con éxito!";
+    if ($_GET['status'] == 'reserva_actualizada') $mensaje = "¡Estado de la reserva actualizado con éxito!";
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
-    $accion = $_POST['accion'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // ================= PROCESAR ACCIONES DE RESERVA =================
+    if (isset($_POST['accion_reserva'])) {
+        $idReserva = intval($_POST['id_reserva']);
+        $nuevaAccion = $_POST['accion_reserva']; // 'Aprobada' o 'Rechazada'
 
-    // ================= SALONES (ABM) =================
-    if ($accion === 'crear_salon') {
-        $nombre = trim($_POST['nombre']);
-        $capacidad = intval($_POST['capacidad_maxima']);
-        $direccion = trim($_POST['direccion']);
-        $precio_base = floatval($_POST['precio_base']);
-        $tipo_salon = trim($_POST['tipo_salon']);
+        // Actualizar estado en la tabla reserva
+        $stmtUpd = $pdo->prepare("UPDATE reserva SET estado = ? WHERE id_reserva = ?");
+        $stmtUpd->execute([$nuevaAccion, $idReserva]);
+        
+        // Actualizar estado en la tabla pago
+        $stmtPagoUpd = $pdo->prepare("UPDATE pago SET estado = ? WHERE id_reserva = ?");
+        $stmtPagoUpd->execute([$nuevaAccion, $idReserva]);
 
-        try {
-            $stmt = $pdo->prepare("INSERT INTO salon (nombre, capacidad_maxima, direccion, precio_base, tipo_salon, estado) VALUES (?, ?, ?, ?, ?, 'activo')");
-            $stmt->execute([$nombre, $capacidad, $direccion, $precio_base, $tipo_salon]);
-            header("Location: admin.php?status=creado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al agregar el salón: " . $e->getMessage();
-        }
+        header("Location: admin.php?status=reserva_actualizada");
+        exit();
     }
 
-    if ($accion === 'modificar_salon') {
-        $id_salon = intval($_POST['id_salon']);
-        $nombre = trim($_POST['nombre']);
-        $capacidad = intval($_POST['capacidad_maxima']);
-        $direccion = trim($_POST['direccion']);
-        $precio_base = floatval($_POST['precio_base']);
-        $tipo_salon = trim($_POST['tipo_salon']);
+    // ================= ACCIONES DE ABM =================
+    if (isset($_POST['accion'])) {
+        $accion = $_POST['accion'];
 
-        try {
-            $stmt = $pdo->prepare("UPDATE salon SET nombre = ?, capacidad_maxima = ?, direccion = ?, precio_base = ?, tipo_salon = ? WHERE id_salon = ?");
-            $stmt->execute([$nombre, $capacidad, $direccion, $precio_base, $tipo_salon, $id_salon]);
-            header("Location: admin.php?status=modificado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al modificar el salón: " . $e->getMessage();
+        // SALONES (ABM)
+        if ($accion === 'crear_salon') {
+            $nombre = trim($_POST['nombre']);
+            $capacidad = intval($_POST['capacidad_maxima']);
+            $direccion = trim($_POST['direccion']);
+            $precio_base = floatval($_POST['precio_base']);
+            $tipo_salon = trim($_POST['tipo_salon']);
+
+            try {
+                $stmt = $pdo->prepare("INSERT INTO salon (nombre, capacidad_maxima, direccion, precio_base, tipo_salon, estado) VALUES (?, ?, ?, ?, ?, 'activo')");
+                $stmt->execute([$nombre, $capacidad, $direccion, $precio_base, $tipo_salon]);
+                header("Location: admin.php?status=creado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al agregar el salón: " . $e->getMessage();
+            }
         }
-    }
 
-    if ($accion === 'eliminar_salon') {
-        $id_salon = intval($_POST['id_salon']);
-        try {
-            $stmt = $pdo->prepare("DELETE FROM salon WHERE id_salon = ?");
-            $stmt->execute([$id_salon]);
-            header("Location: admin.php?status=eliminado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al eliminar el salón (es posible que tenga reservas asociadas).";
+        if ($accion === 'modificar_salon') {
+            $id_salon = intval($_POST['id_salon']);
+            $nombre = trim($_POST['nombre']);
+            $capacidad = intval($_POST['capacidad_maxima']);
+            $direccion = trim($_POST['direccion']);
+            $precio_base = floatval($_POST['precio_base']);
+            $tipo_salon = trim($_POST['tipo_salon']);
+
+            try {
+                $stmt = $pdo->prepare("UPDATE salon SET nombre = ?, capacidad_maxima = ?, direccion = ?, precio_base = ?, tipo_salon = ? WHERE id_salon = ?");
+                $stmt->execute([$nombre, $capacidad, $direccion, $precio_base, $tipo_salon, $id_salon]);
+                header("Location: admin.php?status=modificado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al modificar el salón: " . $e->getMessage();
+            }
         }
-    }
 
-    // ================= SERVICIOS (ABM) =================
-    if ($accion === 'crear_servicio') {
-        $nombre = trim($_POST['nombre_servicio']);
-        $descripcion = trim($_POST['descripcion']);
-        $precio_base = floatval($_POST['precio_base']);
-        $categoria = trim($_POST['categoria']);
-
-        try {
-            $stmt = $pdo->prepare("INSERT INTO servicio (nombre_servicio, descripcion, precio_base, categoria) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$nombre, $descripcion, $precio_base, $categoria]);
-            header("Location: admin.php?status=servicio_creado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al agregar el servicio: " . $e->getMessage();
+        if ($accion === 'eliminar_salon') {
+            $id_salon = intval($_POST['id_salon']);
+            try {
+                $stmt = $pdo->prepare("DELETE FROM salon WHERE id_salon = ?");
+                $stmt->execute([$id_salon]);
+                header("Location: admin.php?status=eliminado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al eliminar el salón (es posible que tenga reservas asociadas).";
+            }
         }
-    }
 
-    if ($accion === 'modificar_servicio') {
-        $id_servicio = intval($_POST['id_servicio']);
-        $nombre = trim($_POST['nombre_servicio']);
-        $descripcion = trim($_POST['descripcion']);
-        $precio_base = floatval($_POST['precio_base']);
-        $categoria = trim($_POST['categoria']);
+        // SERVICIOS (ABM)
+        if ($accion === 'crear_servicio') {
+            $nombre = trim($_POST['nombre_servicio']);
+            $descripcion = trim($_POST['descripcion']);
+            $precio_base = floatval($_POST['precio_base']);
+            $categoria = trim($_POST['categoria']);
 
-        try {
-            $stmt = $pdo->prepare("UPDATE servicio SET nombre_servicio = ?, descripcion = ?, precio_base = ?, categoria = ? WHERE id_servicio = ?");
-            $stmt->execute([$nombre, $descripcion, $precio_base, $categoria, $id_servicio]);
-            header("Location: admin.php?status=servicio_modificado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al modificar el servicio: " . $e->getMessage();
+            try {
+                $stmt = $pdo->prepare("INSERT INTO servicio (nombre_servicio, descripcion, precio_base, categoria) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$nombre, $descripcion, $precio_base, $categoria]);
+                header("Location: admin.php?status=servicio_creado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al agregar el servicio: " . $e->getMessage();
+            }
         }
-    }
 
-    if ($accion === 'eliminar_servicio') {
-        $id_servicio = intval($_POST['id_servicio']);
-        try {
-            $stmt = $pdo->prepare("DELETE FROM servicio WHERE id_servicio = ?");
-            $stmt->execute([$id_servicio]);
-            header("Location: admin.php?status=servicio_eliminado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al eliminar el servicio.";
+        if ($accion === 'modificar_servicio') {
+            $id_servicio = intval($_POST['id_servicio']);
+            $nombre = trim($_POST['nombre_servicio']);
+            $descripcion = trim($_POST['descripcion']);
+            $precio_base = floatval($_POST['precio_base']);
+            $categoria = trim($_POST['categoria']);
+
+            try {
+                $stmt = $pdo->prepare("UPDATE servicio SET nombre_servicio = ?, descripcion = ?, precio_base = ?, categoria = ? WHERE id_servicio = ?");
+                $stmt->execute([$nombre, $descripcion, $precio_base, $categoria, $id_servicio]);
+                header("Location: admin.php?status=servicio_modificado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al modificar el servicio: " . $e->getMessage();
+            }
         }
-    }
 
-    // ================= PERSONAL (ABM) =================
-    if ($accion === 'crear_personal') {
-        $nombre = trim($_POST['nombre']);
-        $apellido = trim($_POST['apellido']);
-        $dni_cuit = trim($_POST['dni_cuit']);
-        $telefono = trim($_POST['telefono']);
-        $email = trim($_POST['email']);
-        $tipo_personal = trim($_POST['tipo_personal']);
-
-        try {
-            $stmt = $pdo->prepare("INSERT INTO personal (nombre, apellido, dni_cuit, telefono, email, tipo_personal) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$nombre, $apellido, $dni_cuit, $telefono, $email, $tipo_personal]);
-            header("Location: admin.php?status=personal_creado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al agregar el personal: " . $e->getMessage();
+        if ($accion === 'eliminar_servicio') {
+            $id_servicio = intval($_POST['id_servicio']);
+            try {
+                $stmt = $pdo->prepare("DELETE FROM servicio WHERE id_servicio = ?");
+                $stmt->execute([$id_servicio]);
+                header("Location: admin.php?status=servicio_eliminado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al eliminar el servicio.";
+            }
         }
-    }
 
-    if ($accion === 'modificar_personal') {
-        $id_personal = intval($_POST['id_personal']);
-        $nombre = trim($_POST['nombre']);
-        $apellido = trim($_POST['apellido']);
-        $dni_cuit = trim($_POST['dni_cuit']);
-        $telefono = trim($_POST['telefono']);
-        $email = trim($_POST['email']);
-        $tipo_personal = trim($_POST['tipo_personal']);
+        // PERSONAL (ABM)
+        if ($accion === 'crear_personal') {
+            $nombre = trim($_POST['nombre']);
+            $apellido = trim($_POST['apellido']);
+            $dni_cuit = trim($_POST['dni_cuit']);
+            $telefono = trim($_POST['telefono']);
+            $email = trim($_POST['email']);
+            $tipo_personal = trim($_POST['tipo_personal']);
 
-        try {
-            $stmt = $pdo->prepare("UPDATE personal SET nombre = ?, apellido = ?, dni_cuit = ?, telefono = ?, email = ?, tipo_personal = ? WHERE id_personal = ?");
-            $stmt->execute([$nombre, $apellido, $dni_cuit, $telefono, $email, $tipo_personal, $id_personal]);
-            header("Location: admin.php?status=personal_modificado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al modificar el personal: " . $e->getMessage();
+            try {
+                $stmt = $pdo->prepare("INSERT INTO personal (nombre, apellido, dni_cuit, telefono, email, tipo_personal) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$nombre, $apellido, $dni_cuit, $telefono, $email, $tipo_personal]);
+                header("Location: admin.php?status=personal_creado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al agregar el personal: " . $e->getMessage();
+            }
         }
-    }
 
-    if ($accion === 'eliminar_personal') {
-        $id_personal = intval($_POST['id_personal']);
-        try {
-            $stmt = $pdo->prepare("DELETE FROM personal WHERE id_personal = ?");
-            $stmt->execute([$id_personal]);
-            header("Location: admin.php?status=personal_eliminado");
-            exit();
-        } catch (PDOException $e) {
-            $mensaje = "Error al eliminar el personal.";
+        if ($accion === 'modificar_personal') {
+            $id_personal = intval($_POST['id_personal']);
+            $nombre = trim($_POST['nombre']);
+            $apellido = trim($_POST['apellido']);
+            $dni_cuit = trim($_POST['dni_cuit']);
+            $telefono = trim($_POST['telefono']);
+            $email = trim($_POST['email']);
+            $tipo_personal = trim($_POST['tipo_personal']);
+
+            try {
+                $stmt = $pdo->prepare("UPDATE personal SET nombre = ?, apellido = ?, dni_cuit = ?, telefono = ?, email = ?, tipo_personal = ? WHERE id_personal = ?");
+                $stmt->execute([$nombre, $apellido, $dni_cuit, $telefono, $email, $tipo_personal, $id_personal]);
+                header("Location: admin.php?status=personal_modificado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al modificar el personal: " . $e->getMessage();
+            }
+        }
+
+        if ($accion === 'eliminar_personal') {
+            $id_personal = intval($_POST['id_personal']);
+            try {
+                $stmt = $pdo->prepare("DELETE FROM personal WHERE id_personal = ?");
+                $stmt->execute([$id_personal]);
+                header("Location: admin.php?status=personal_eliminado");
+                exit();
+            } catch (PDOException $e) {
+                $mensaje = "Error al eliminar el personal.";
+            }
         }
     }
 }
@@ -195,96 +216,14 @@ if (isset($_GET['editar_personal'])) {
 $salones = $pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
 $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
 $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
-// Procesar Aceptación o Rechazo por parte del Administrador
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion_reserva'])) {
-        $idReserva = intval($_POST['id_reserva']);
-        $nuevaAccion = $_POST['accion_reserva']; // 'Aprobada' o 'Rechazada'
 
-        // Actualizar estado en la tabla reserva
-        $stmtUpd = $pdo->prepare("UPDATE reserva SET estado = ? WHERE id_reserva = ?");
-        $stmtUpd->execute([$nuevaAccion, $idReserva]);
-        
-        // Actualizar estado en la tabla pago
-        $stmtPagoUpd = $pdo->prepare("UPDATE pago SET estado = ? WHERE id_reserva = ?");
-        $stmtPagoUpd->execute([$nuevaAccion, $idReserva]);
-
-        header("Location: admin.php?status=reserva_actualizada");
-        exit();
-    }
-
-    // Obtener listado completo de reservas con datos relacionados
-    $listadoReservas = $pdo->query("SELECT r.*, s.nombre as salon_nombre, c.nombre as cliente_nombre, c.telefono, p.metodo_pago, p.estado as estado_pago 
-                                    FROM reserva r 
-                                    JOIN salon s ON r.id_salon = s.id_salon 
-                                    JOIN cliente c ON r.id_cliente = c.id_cliente 
-                                    LEFT JOIN pago p ON r.id_reserva = p.id_reserva 
-                                    ORDER BY r.id_reserva DESC")->fetchAll(PDO::FETCH_ASSOC);
-    ?>
-
-    <!-- SECCIÓN 4: GESTIÓN DE RESERVAS (ADMINISTRADOR) -->
-    <div id="abm-reservas" class="abm-content box is-hidden">
-      <h2 class="title is-4 has-text-warning-dark">Notificaciones de Solicitudes de Reserva</h2><br>
-      <p class="subtitle is-6">Revisá las peticiones de los clientes, qué salón solicitaron, cuándo y tomá acción.</p>
-
-      <div class="table-container">
-        <table class="table is-fullwidth is-striped is-hoverable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Cliente / Teléfono</th>
-              <th>Salón Solicitado</th>
-              <th>Fecha del Evento</th>
-              <th>Método de Pago</th>
-              <th>Estado</th>
-              <th class="has-text-centered">Acciones (Aceptar / Rechazar)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (count($listadoReservas) > 0): ?>
-              <?php foreach ($listadoReservas as $res): ?>
-                <tr>
-                  <td><?php echo $res['id_reserva']; ?></td>
-                  <td><strong><?php echo htmlspecialchars($res['cliente_nombre']); ?></strong><br><small><?php echo htmlspecialchars($res['telefono']); ?></small></td>
-                  <td><?php echo htmlspecialchars($res['salon_nombre']); ?></td>
-                  <td><?php echo htmlspecialchars($res['fecha_evento']); ?></td>
-                  <td><span class="tag is-light"><?php echo ucfirst($res['metodo_pago'] ?? 'efectivo'); ?></span></td>
-                  <td>
-                    <span class="tag <?php echo ($res['estado'] == 'Aprobada') ? 'is-success' : (($res['estado'] == 'Rechazada') ? 'is-danger' : 'is-warning'); ?>">
-                      <?php echo $res['estado']; ?>
-                    </span>
-                  </td>
-                  <td class="has-text-centered">
-                    <?php if ($res['estado'] == 'Pendiente'): ?>
-                      <form method="POST" style="display:inline;">
-                        <input type="hidden" name="id_reserva" value="<?php echo $res['id_reserva']; ?>">
-                        <button type="submit" name="accion_reserva" value="Aprobada" class="button is-small is-success mr-1" title="Aceptar Reserva">
-                          <i class="fas fa-check mr-1"></i> Aceptar
-                        </button>
-                        <button type="submit" name="accion_reserva" value="Rechazada" class="button is-small is-danger" title="Rechazar Reserva">
-                          <i class="fas fa-times mr-1"></i> Rechazar
-                        </button>
-                      </form>
-                    <?php else: ?>
-                      <span class="tag is-light">Procesada</span>
-                    <?php endif; ?>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php else: ?>
-              <tr>
-                <td colspan="7" class="has-text-centered">No hay solicitudes de reserva registradas.</td>
-              </tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-
-
-
-
-
+// Obtener listado completo de reservas con datos relacionados
+$listadoReservas = $pdo->query("SELECT r.*, s.nombre as salon_nombre, c.nombre as cliente_nombre, c.telefono, p.metodo_pago, p.estado as estado_pago 
+                                FROM reserva r 
+                                JOIN salon s ON r.id_salon = s.id_salon 
+                                JOIN cliente c ON r.id_cliente = c.id_cliente 
+                                LEFT JOIN pago p ON r.id_reserva = p.id_reserva 
+                                ORDER BY r.id_reserva DESC")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -625,10 +564,69 @@ $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC
         </div>
       </div>
 
+      <!-- SECCIÓN 4: GESTIÓN DE RESERVAS (ADMINISTRADOR) -->
+      <div id="abm-reservas" class="abm-content box is-hidden">
+        <h2 class="title is-4 has-text-warning-dark">Notificaciones de Solicitudes de Reserva</h2><br>
+        <p class="subtitle is-6">Revisá las peticiones de los clientes, qué salón solicitaron, cuándo y tomá acción.</p>
+
+        <div class="table-container">
+          <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente / Teléfono</th>
+                <th>Salón Solicitado</th>
+                <th>Fecha del Evento</th>
+                <th>Método de Pago</th>
+                <th>Estado</th>
+                <th class="has-text-centered">Acciones (Aceptar / Rechazar)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php if (count($listadoReservas) > 0): ?>
+                <?php foreach ($listadoReservas as $res): ?>
+                  <tr>
+                    <td><?php echo $res['id_reserva']; ?></td>
+                    <td><strong><?php echo htmlspecialchars($res['cliente_nombre']); ?></strong><br><small><?php echo htmlspecialchars($res['telefono']); ?></small></td>
+                    <td><?php echo htmlspecialchars($res['salon_nombre']); ?></td>
+                    <td><?php echo htmlspecialchars($res['fecha_evento']); ?></td>
+                    <td><span class="tag is-light"><?php echo ucfirst($res['metodo_pago'] ?? 'efectivo'); ?></span></td>
+                    <td>
+                      <span class="tag <?php echo ($res['estado'] == 'Aprobada') ? 'is-success' : (($res['estado'] == 'Rechazada') ? 'is-danger' : 'is-warning'); ?>">
+                        <?php echo $res['estado']; ?>
+                      </span>
+                    </td>
+                    <td class="has-text-centered">
+                      <?php if ($res['estado'] == 'Pendiente'): ?>
+                        <form method="POST" style="display:inline;">
+                          <input type="hidden" name="id_reserva" value="<?php echo $res['id_reserva']; ?>">
+                          <button type="submit" name="accion_reserva" value="Aprobada" class="button is-small is-success mr-1" title="Aceptar Reserva">
+                            <i class="fas fa-check mr-1"></i> Aceptar
+                          </button>
+                          <button type="submit" name="accion_reserva" value="Rechazada" class="button is-small is-danger" title="Rechazar Reserva">
+                            <i class="fas fa-times mr-1"></i> Rechazar
+                          </button>
+                        </form>
+                      <?php else: ?>
+                        <span class="tag is-light">Procesada</span>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="7" class="has-text-centered">No hay solicitudes de reserva registradas.</td>
+                </tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </section>
 
-  <!-- SCRIPT CORREGIDO PARA CAMBIAR ENTRE PESTAÑAS -->
+  <!-- SCRIPT PARA CAMBIAR ENTRE PESTAÑAS -->
   <script>
     document.querySelectorAll('#admin-tabs li').forEach(tab => {
       tab.addEventListener('click', function() {
