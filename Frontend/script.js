@@ -228,6 +228,13 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     }
   }
 
+  const serviciosSeleccionados = [];
+  document.querySelectorAll('.servicio-check:checked').forEach(checkbox => {
+    serviciosSeleccionados.push(parseInt(checkbox.value, 10));
+  });
+
+  
+
   const datosReserva = {
     id_salon: idSalon,
     fecha_evento: fechaEvento,
