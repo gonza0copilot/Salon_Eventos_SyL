@@ -244,7 +244,8 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     nombre: txtNombre ? txtNombre.value : "Cliente Web",
     dni: txtDni.value,
     telefono: txtTel.value,
-    email: emailCliente // <--- SE ENVÍA EL CORREO REAL DEL CLIENTE AUTENTICADO
+    email: emailCliente, // <--- SE ENVÍA EL CORREO REAL DEL CLIENTE AUTENTICADO
+    servicios: serviciosSeleccionados
   };
 
   fetch('../Backend/procesar_reserva.php', {
