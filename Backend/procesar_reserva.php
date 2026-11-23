@@ -6,10 +6,9 @@ $data = json_decode(file_get_contents("php://input"), true);
 
 if ($data) {
     $emailCliente = trim($data['email'] ?? '');
-    $idSalon = $data['id_salon'] ?? 1;
+    $idSalon = intval($data['id_salon'] ?? 1);
     $fechaEvento = $data['fecha_evento'] ?? '';
     $turno = $data['turno'] ?? '';
-    $montoTotal = $data['monto_total'] ?? 0;
     $metodoPago = trim($data['metodo_pago'] ?? 'efectivo'); // 'efectivo' o 'transferencia'
     $servicios = $data['servicios'] ?? [];
 
@@ -23,6 +22,16 @@ if ($data) {
     }
 
     try {
+        // Obtener precio base del salón desde la base de datos
+        $stmtSalon = $pdo->prepare("SELECT precio_base FROM salon WHERE id_salon = ?");
+        $stmtSalon->execute([$idSalon]);
+        $precioSalon = $stmtSalon->fetchColumn();
+
+        if ($precioSalon === false) {
+            echo json_encode(["status" => "error", "message" => "El salón seleccionado no existe."], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
         // Validación: Solo permitir una reserva por salón por fecha
         $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM reserva WHERE id_salon = ? AND fecha_evento = ? AND estado != 'Rechazada'");
         $stmtCheck->execute([$idSalon, $fechaEvento]);
@@ -58,9 +67,32 @@ if ($data) {
             $horaInicio = '20:00:00';
             $horaFin = '04:00:00';
         }
-        $cantidadInvitados = 100; 
+        $cantidadInvitados = 100;
 
-        // 1. Insertar la reserva con estado inicial "Pendiente"
+        // Calcular monto total en servidor: precio base del salón + precios base de servicios elegidos
+        $montoTotal = floatval($precioSalon);
+        $serviciosValidos = [];
+
+        if (!empty($servicios) && is_array($servicios)) {
+            $stmtPrecioServ = $pdo->prepare("SELECT precio_base FROM servicio WHERE id_servicio = ?");
+            foreach ($servicios as $idServicio) {
+                $idServicioLimpio = intval($idServicio);
+                if ($idServicioLimpio > 0) {
+                    $stmtPrecioServ->execute([$idServicioLimpio]);
+                    $precioServ = $stmtPrecioServ->fetchColumn();
+                    if ($precioServ !== false) {
+                        $precioServFloat = floatval($precioServ);
+                        $montoTotal += $precioServFloat;
+                        $serviciosValidos[] = [
+                            'id_servicio' => $idServicioLimpio,
+                            'precio_final' => $precioServFloat
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 1. Insertar la reserva con estado inicial "Pendiente" y monto calculado en PHP
         $sqlReserva = "INSERT INTO reserva (id_cliente, id_salon, fecha_evento, hora_inicio, hora_fin, cantidad_invitados, monto_total, estado) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente')";
         $stmtReserva = $pdo->prepare($sqlReserva);
         $stmtReserva->execute([$idCliente, $idSalon, $fechaEvento, $horaInicio, $horaFin, $cantidadInvitados, $montoTotal]);
@@ -72,20 +104,10 @@ if ($data) {
         $stmtPago->execute([$idReserva, $montoTotal, $metodoPago]);
 
         // 3. Registrar servicios adicionales elegidos en detalle_reserva_servicio
-        if (!empty($servicios) && is_array($servicios)) {
-            $stmtPrecioServ = $pdo->prepare("SELECT precio_base FROM servicio WHERE id_servicio = ?");
+        if (!empty($serviciosValidos)) {
             $stmtDetalle = $pdo->prepare("INSERT INTO detalle_reserva_servicio (id_reserva, id_servicio, cantidad, precio_final) VALUES (?, ?, 1, ?)");
-
-            foreach ($servicios as $idServicio) {
-                $idServicioLimpio = intval($idServicio);
-                if ($idServicioLimpio > 0) {
-                    $stmtPrecioServ->execute([$idServicioLimpio]);
-                    $precioServ = $stmtPrecioServ->fetchColumn();
-
-                    if ($precioServ !== false) {
-                        $stmtDetalle->execute([$idReserva, $idServicioLimpio, $precioServ]);
-                    }
-                }
+            foreach ($serviciosValidos as $servItem) {
+                $stmtDetalle->execute([$idReserva, $servItem['id_servicio'], $servItem['precio_final']]);
             }
         }
 
