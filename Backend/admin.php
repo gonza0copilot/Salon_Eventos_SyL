@@ -302,7 +302,7 @@ if ($esAdmin) {
     <section class="section">
       <div class="container" style="max-width: 440px;">
         <div class="box p-5">
-          <h1 class="title is-4 has-text-centered mb-2">Acceso Restringido</h1>
+          <h1 class="title is-4 has-text-centered mb-2">Acceso Restringido</h1> <br>
           <p class="subtitle is-6 has-text-grey has-text-centered mb-4">Ingresá el correo y la contraseña de Administrador.</p>
 
           <?php if (!empty($errorLogin)): ?>
