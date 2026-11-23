@@ -6,22 +6,22 @@ require_once 'conexion.php';
 // Obtener los datos JSON enviados por fetch
 $data = json_decode(file_get_contents("php://input"), true);
 
-$email = trim($data['email'] ?? '');
+$identificador = trim($data['email'] ?? $data['usuario'] ?? '');
 $password = trim($data['password'] ?? '');
 
-if (empty($email) || empty($password)) {
-    echo json_encode(["status" => "error", "message" => "Faltan completar campos obligatorios."]);
+if (empty($identificador) || empty($password)) {
+    echo json_encode(["status" => "error", "message" => "Faltan completar campos obligatorios."], JSON_UNESCAPED_UNICODE);
     exit();
 }
 
 try {
-    // 1. Buscar primero en la tabla USUARIO (para el Administrador y personal)
-    $stmtAdmin = $pdo->prepare("SELECT * FROM usuario WHERE email = ?");
-    $stmtAdmin->execute([$email]);
+    // 1. Buscar primero en la tabla USUARIO por nombre o email (para el Administrador y personal)
+    $stmtAdmin = $pdo->prepare("SELECT * FROM usuario WHERE email = ? OR nombre = ? LIMIT 1");
+    $stmtAdmin->execute([$identificador, $identificador]);
     $usuario = $stmtAdmin->fetch();
 
     if ($usuario) {
-        // Verificar contraseña del administrador
+        // Verificar contraseña del administrador/usuario
         if (password_verify($password, $usuario['contrasena'])) {
             // Guardar los datos del usuario en la sesión de PHP
             $_SESSION['usuario'] = $usuario['email'];
@@ -32,18 +32,19 @@ try {
                 "status" => "success",
                 "message" => "¡Bienvenido, Administrador " . $usuario['nombre'] . "!",
                 "nombre" => $usuario['nombre'],
+                "email" => $usuario['email'],
                 "rol" => $usuario['rol'] // Enviamos el rol real devuelto por la BD
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             exit();
         } else {
-            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta."]);
+            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta."], JSON_UNESCAPED_UNICODE);
             exit();
         }
     }
 
-    // 2. Si no es un usuario/admin, buscar en la tabla CLIENTE
-    $stmtCliente = $pdo->prepare("SELECT * FROM cliente WHERE email = ?");
-    $stmtCliente->execute([$email]);
+    // 2. Si no es un usuario/admin, buscar en la tabla CLIENTE por nombre o email
+    $stmtCliente = $pdo->prepare("SELECT * FROM cliente WHERE email = ? OR nombre = ? LIMIT 1");
+    $stmtCliente->execute([$identificador, $identificador]);
     $user = $stmtCliente->fetch();
 
     if ($user) {
@@ -53,17 +54,18 @@ try {
                 "status" => "success", 
                 "message" => "¡Bienvenido de nuevo, " . $user['nombre'] . "!",
                 "nombre" => $user['nombre'],
+                "email" => $user['email'],
                 "rol" => "cliente"
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
         } else {
-            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta."]);
+            echo json_encode(["status" => "error", "message" => "Contraseña incorrecta."], JSON_UNESCAPED_UNICODE);
         }
     } else {
-        // Correo no encontrado en ninguna de las dos tablas
-        echo json_encode(["status" => "error", "message" => "No existe una cuenta registrada con ese correo."]);
+        // Nombre o correo no encontrado en ninguna de las dos tablas
+        echo json_encode(["status" => "error", "message" => "No existe una cuenta registrada con ese nombre o correo."], JSON_UNESCAPED_UNICODE);
     }
 
 } catch (PDOException $e) {
-    echo json_encode(["status" => "error", "message" => "Error en la base de datos: " . $e->getMessage()]);
+    echo json_encode(["status" => "error", "message" => "Error en la base de datos: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
 }
 ?>
