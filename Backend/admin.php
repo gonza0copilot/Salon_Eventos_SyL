@@ -2,14 +2,49 @@
 session_start();
 require_once 'conexion.php';
 
-// Validar que exista una sesión activa y que sea estrictamente Administrador
-if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'Administrador') {
-    header("Location: ../frontend/index.html");
+// Cerrar sesión de administrador
+if (isset($_GET['logout'])) {
+    unset($_SESSION['rol'], $_SESSION['usuario_id'], $_SESSION['usuario_nombre'], $_SESSION['usuario_email']);
+    header("Location: admin.php");
     exit();
 }
 
+$errorLogin = "";
+
+// Procesar login directo de administrador si no está autenticado
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_admin'])) {
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if ($email === '' || $password === '') {
+        $errorLogin = "Por favor ingresá tu correo electrónico y contraseña.";
+    } else {
+        $stmtAuth = $pdo->prepare("SELECT id_usuario, nombre, apellido, email, rol, contrasena FROM usuario WHERE email = ? LIMIT 1");
+        $stmtAuth->execute([$email]);
+        $usuarioAuth = $stmtAuth->fetch(PDO::FETCH_ASSOC);
+
+        if (
+            $usuarioAuth &&
+            password_verify($password, $usuarioAuth['contrasena']) &&
+            $usuarioAuth['rol'] === 'Administrador'
+        ) {
+            $_SESSION['usuario_id'] = $usuarioAuth['id_usuario'];
+            $_SESSION['usuario_nombre'] = $usuarioAuth['nombre'] . ' ' . $usuarioAuth['apellido'];
+            $_SESSION['usuario_email'] = $usuarioAuth['email'];
+            $_SESSION['rol'] = 'Administrador';
+
+            header("Location: admin.php");
+            exit();
+        } else {
+            $errorLogin = "Correo o contraseña incorrectos, o la cuenta no tiene permisos de Administrador.";
+        }
+    }
+}
+
+$esAdmin = isset($_SESSION['rol']) && $_SESSION['rol'] === 'Administrador';
+
 $mensaje = "";
-if (isset($_GET['status'])) {
+if ($esAdmin && isset($_GET['status'])) {
     if ($_GET['status'] == 'creado') $mensaje = "¡Salón agregado con éxito!";
     if ($_GET['status'] == 'modificado') $mensaje = "¡Salón modificado con éxito!";
     if ($_GET['status'] == 'eliminado') $mensaje = "¡Salón eliminado con éxito!";
@@ -22,7 +57,7 @@ if (isset($_GET['status'])) {
     if ($_GET['status'] == 'reserva_actualizada') $mensaje = "¡Estado de la reserva actualizado con éxito!";
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($esAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['login_admin'])) {
     // ================= PROCESAR ACCIONES DE RESERVA =================
     if (isset($_POST['accion_reserva'])) {
         $idReserva = intval($_POST['id_reserva']);
@@ -190,40 +225,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Ediciones
 $salonEditar = null;
-if (isset($_GET['editar'])) {
-    $stmtEdit = $pdo->prepare("SELECT * FROM salon WHERE id_salon = ?");
-    $stmtEdit->execute([intval($_GET['editar'])]);
-    $salonEditar = $stmtEdit->fetch(PDO::FETCH_ASSOC);
-}
-
 $servicioEditar = null;
-if (isset($_GET['editar_servicio'])) {
-    $stmtEditS = $pdo->prepare("SELECT * FROM servicio WHERE id_servicio = ?");
-    $stmtEditS->execute([intval($_GET['editar_servicio'])]);
-    $servicioEditar = $stmtEditS->fetch(PDO::FETCH_ASSOC);
-}
-
 $personalEditar = null;
-if (isset($_GET['editar_personal'])) {
-    $stmtEditP = $pdo->prepare("SELECT * FROM personal WHERE id_personal = ?");
-    $stmtEditP->execute([intval($_GET['editar_personal'])]);
-    $personalEditar = $stmtEditP->fetch(PDO::FETCH_ASSOC);
+$salones = [];
+$servicios = [];
+$personalList = [];
+$listadoReservas = [];
+
+if ($esAdmin) {
+    // Ediciones
+    if (isset($_GET['editar'])) {
+        $stmtEdit = $pdo->prepare("SELECT * FROM salon WHERE id_salon = ?");
+        $stmtEdit->execute([intval($_GET['editar'])]);
+        $salonEditar = $stmtEdit->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if (isset($_GET['editar_servicio'])) {
+        $stmtEditS = $pdo->prepare("SELECT * FROM servicio WHERE id_servicio = ?");
+        $stmtEditS->execute([intval($_GET['editar_servicio'])]);
+        $servicioEditar = $stmtEditS->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if (isset($_GET['editar_personal'])) {
+        $stmtEditP = $pdo->prepare("SELECT * FROM personal WHERE id_personal = ?");
+        $stmtEditP->execute([intval($_GET['editar_personal'])]);
+        $personalEditar = $stmtEditP->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Listas
+    $salones = $pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
+    $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
+    $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Obtener listado completo de reservas con datos relacionados
+    $listadoReservas = $pdo->query("SELECT r.*, s.nombre as salon_nombre, c.nombre as cliente_nombre, c.telefono, p.metodo_pago, p.estado as estado_pago 
+                                    FROM reserva r 
+                                    JOIN salon s ON r.id_salon = s.id_salon 
+                                    JOIN cliente c ON r.id_cliente = c.id_cliente 
+                                    LEFT JOIN pago p ON r.id_reserva = p.id_reserva 
+                                    ORDER BY r.id_reserva DESC")->fetchAll(PDO::FETCH_ASSOC);
 }
-
-// Listas
-$salones = $pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
-$servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
-$personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
-
-// Obtener listado completo de reservas con datos relacionados
-$listadoReservas = $pdo->query("SELECT r.*, s.nombre as salon_nombre, c.nombre as cliente_nombre, c.telefono, p.metodo_pago, p.estado as estado_pago 
-                                FROM reserva r 
-                                JOIN salon s ON r.id_salon = s.id_salon 
-                                JOIN cliente c ON r.id_cliente = c.id_cliente 
-                                LEFT JOIN pago p ON r.id_reserva = p.id_reserva 
-                                ORDER BY r.id_reserva DESC")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -247,399 +289,441 @@ $listadoReservas = $pdo->query("SELECT r.*, s.nombre as salon_nombre, c.nombre a
       </div>
       <div class="navbar-end">
         <div class="navbar-item">
-          <a href="../frontend/index.html" class="button is-light is-small">Volver al Sitio</a>
+          <a href="../frontend/index.html" class="button is-light is-small mr-2">Volver al Sitio</a>
+          <?php if ($esAdmin): ?>
+            <a href="admin.php?logout=1" class="button is-danger is-small">Cerrar Sesión</a>
+          <?php endif; ?>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <section class="section">
-    <div class="container">
-      <h1 class="title is-3 has-text-centered mb-5">Gestión y ABM del Sistema</h1> 
+  <?php if (!$esAdmin): ?>
+    <section class="section">
+      <div class="container" style="max-width: 440px;">
+        <div class="box p-5">
+          <h1 class="title is-4 has-text-centered mb-2">Acceso Restringido</h1>
+          <p class="subtitle is-6 has-text-grey has-text-centered mb-4">Ingresá el correo y la contraseña de Administrador.</p>
 
-      <?php if (!empty($mensaje)): ?>
-        <div class="notification is-success is-light"><?php echo $mensaje; ?></div>
-      <?php endif; ?>
-
-      <!-- PESTAÑAS DE NAVEGACIÓN -->
-      <div class="tabs is-boxed is-centered" id="admin-tabs">
-        <ul>
-          <li class="<?php echo ($servicioEditar || $personalEditar) ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
-          <li class="<?php echo $servicioEditar ? 'is-active' : ''; ?>" data-target="abm-servicios"><a><i class="fas fa-concierge-bell mr-2"></i> Servicios</a></li>
-          <li class="<?php echo $personalEditar ? 'is-active' : ''; ?>" data-target="abm-personal"><a><i class="fas fa-users-cog mr-2"></i> Personal</a></li>
-          <li data-target="abm-reservas"><a><i class="fas fa-bell mr-2"></i> Solicitudes de Reserva</a></li>
-        </ul>
-      </div>
-
-      <!-- SECCIÓN 1: ABM SALONES -->
-      <div id="abm-salones" class="abm-content box <?php echo ($servicioEditar || $personalEditar) ? 'is-hidden' : ''; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2> <br>
-        <p class="subtitle is-6">Control de altas, modificaciones y bajas de espacios.</p>
-
-        <form method="POST" class="box mb-5 has-background-white-ter">
-          <input type="hidden" name="accion" value="<?php echo $salonEditar ? 'modificar_salon' : 'crear_salon'; ?>">
-          <?php if ($salonEditar): ?>
-            <input type="hidden" name="id_salon" value="<?php echo $salonEditar['id_salon']; ?>">
-            <h3 class="title is-5 mb-3 has-text-info">Modificar Salón (ID: <?php echo $salonEditar['id_salon']; ?>)</h3>
-          <?php else: ?>
-            <h3 class="title is-5 mb-3">Agregar Nuevo Salón</h3>
+          <?php if (!empty($errorLogin)): ?>
+            <div class="notification is-danger is-light"><?php echo htmlspecialchars($errorLogin, ENT_QUOTES, 'UTF-8'); ?></div>
           <?php endif; ?>
 
-          <div class="columns is-multiline">
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Nombre del Salón</label>
-                <input class="input" type="text" name="nombre" required value="<?php echo $salonEditar ? htmlspecialchars($salonEditar['nombre']) : ''; ?>">
+          <form method="POST" action="admin.php">
+            <div class="field">
+              <label class="label">Correo electrónico</label>
+              <div class="control has-icons-left">
+                <input class="input" type="email" name="email" required autocomplete="username" placeholder="admin@correo.com">
+                <span class="icon is-small is-left"><i class="fas fa-envelope"></i></span>
               </div>
             </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Capacidad Máxima</label>
-                <input class="input" type="number" name="capacidad_maxima" required value="<?php echo $salonEditar ? $salonEditar['capacidad_maxima'] : ''; ?>">
-              </div>
-            </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Tipo de Salón</label>
-                <input class="input" type="text" name="tipo_salon" required value="<?php echo $salonEditar ? htmlspecialchars($salonEditar['tipo_salon']) : ''; ?>">
-              </div>
-            </div>
-            <div class="column is-6">
-              <div class="field">
-                <label class="label">Dirección</label>
-                <input class="input" type="text" name="direccion" required value="<?php echo $salonEditar ? htmlspecialchars($salonEditar['direccion']) : ''; ?>">
-              </div>
-            </div>
-            <div class="column is-6">
-              <div class="field">
-                <label class="label">Precio Base ($)</label>
-                <input class="input" type="number" step="0.01" name="precio_base" required value="<?php echo $salonEditar ? $salonEditar['precio_base'] : ''; ?>">
-              </div>
-            </div>
-            <div class="column is-12">
-              <button type="submit" class="button <?php echo $salonEditar ? 'is-info' : 'is-warning'; ?> has-text-weight-bold">
-                <?php echo $salonEditar ? 'Guardar Cambios' : 'Guardar Salón'; ?>
-              </button>
-              <?php if ($salonEditar): ?>
-                <a href="admin.php" class="button is-light ml-2">Cancelar</a>
-              <?php endif; ?>
-            </div>
-          </div>
-        </form>
 
-        <h3 class="title is-5 mt-5">Salones Existentes</h3>
-        <div class="table-container">
-          <table class="table is-fullwidth is-striped is-hoverable">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Capacidad</th>
-                <th>Dirección</th>
-                <th>Precio Base</th>
-                <th>Tipo</th>
-                <th class="has-text-centered">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($salones as $salon): ?>
-                <tr>
-                  <td><?php echo $salon['id_salon']; ?></td>
-                  <td><strong><?php echo htmlspecialchars($salon['nombre']); ?></strong></td>
-                  <td><?php echo $salon['capacidad_maxima']; ?> pers.</td>
-                  <td><?php echo htmlspecialchars($salon['direccion']); ?></td>
-                  <td>$<?php echo number_format($salon['precio_base'], 2, ',', '.'); ?></td>
-                  <td><?php echo htmlspecialchars($salon['tipo_salon']); ?></td>
-                  <td class="has-text-centered">
-                    <a href="admin.php?editar=<?php echo $salon['id_salon']; ?>" class="button is-small is-info mr-1" title="Modificar"><i class="fas fa-edit"></i></a>
-                    <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este salón?');">
-                      <input type="hidden" name="accion" value="eliminar_salon">
-                      <input type="hidden" name="id_salon" value="<?php echo $salon['id_salon']; ?>">
-                      <button type="submit" class="button is-small is-danger" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
-                    </form>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
+            <div class="field">
+              <label class="label">Contraseña</label>
+              <div class="control has-icons-left">
+                <input class="input" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+                <span class="icon is-small is-left"><i class="fas fa-lock"></i></span>
+              </div>
+            </div>
+
+            <div class="field mt-4">
+              <button type="submit" name="login_admin" class="button is-warning is-fullwidth has-text-weight-bold">
+                <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión como Admin
+              </button>
+            </div>
+          </form>
         </div>
       </div>
+    </section>
+  <?php else: ?>
+    <!-- CONTENIDO PRINCIPAL -->
+    <section class="section">
+      <div class="container">
+        <h1 class="title is-3 has-text-centered mb-5">Gestión y ABM del Sistema</h1> 
 
-      <!-- SECCIÓN 2: ABM SERVICIOS -->
-      <div id="abm-servicios" class="abm-content box <?php echo $servicioEditar ? '' : 'is-hidden'; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Servicios Adicionales</h2> <br>
-        <p class="subtitle is-6">Controlá los precios y detalles de catering, DJ, decoración y más.</p>
+        <?php if (!empty($mensaje)): ?>
+          <div class="notification is-success is-light"><?php echo htmlspecialchars($mensaje, ENT_QUOTES, 'UTF-8'); ?></div>
+        <?php endif; ?>
 
-        <form method="POST" class="box mb-5 has-background-white-ter">
-          <input type="hidden" name="accion" value="<?php echo $servicioEditar ? 'modificar_servicio' : 'crear_servicio'; ?>">
-          <?php if ($servicioEditar): ?>
-            <input type="hidden" name="id_servicio" value="<?php echo $servicioEditar['id_servicio']; ?>">
-            <h3 class="title is-5 mb-3 has-text-info">Modificar Servicio (ID: <?php echo $servicioEditar['id_servicio']; ?>)</h3>
-          <?php else: ?>
-            <h3 class="title is-5 mb-3">Agregar Nuevo Servicio</h3>
-          <?php endif; ?>
+        <!-- PESTAÑAS DE NAVEGACIÓN -->
+        <div class="tabs is-boxed is-centered" id="admin-tabs">
+          <ul>
+            <li class="<?php echo ($servicioEditar || $personalEditar) ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
+            <li class="<?php echo $servicioEditar ? 'is-active' : ''; ?>" data-target="abm-servicios"><a><i class="fas fa-concierge-bell mr-2"></i> Servicios</a></li>
+            <li class="<?php echo $personalEditar ? 'is-active' : ''; ?>" data-target="abm-personal"><a><i class="fas fa-users-cog mr-2"></i> Personal</a></li>
+            <li data-target="abm-reservas"><a><i class="fas fa-bell mr-2"></i> Solicitudes de Reserva</a></li>
+          </ul>
+        </div>
 
-          <div class="columns is-multiline">
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Nombre del Servicio</label>
-                <input class="input" type="text" name="nombre_servicio" required value="<?php echo $servicioEditar ? htmlspecialchars($servicioEditar['nombre_servicio']) : ''; ?>" placeholder="Ej: Barra Libre">
+        <!-- SECCIÓN 1: ABM SALONES -->
+        <div id="abm-salones" class="abm-content box <?php echo ($servicioEditar || $personalEditar) ? 'is-hidden' : ''; ?>">
+          <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2> <br>
+          <p class="subtitle is-6">Control de altas, modificaciones y bajas de espacios.</p>
+
+          <form method="POST" class="box mb-5 has-background-white-ter">
+            <input type="hidden" name="accion" value="<?php echo $salonEditar ? 'modificar_salon' : 'crear_salon'; ?>">
+            <?php if ($salonEditar): ?>
+              <input type="hidden" name="id_salon" value="<?php echo $salonEditar['id_salon']; ?>">
+              <h3 class="title is-5 mb-3 has-text-info">Modificar Salón (ID: <?php echo $salonEditar['id_salon']; ?>)</h3>
+            <?php else: ?>
+              <h3 class="title is-5 mb-3">Agregar Nuevo Salón</h3>
+            <?php endif; ?>
+
+            <div class="columns is-multiline">
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Nombre del Salón</label>
+                  <input class="input" type="text" name="nombre" required value="<?php echo $salonEditar ? htmlspecialchars($salonEditar['nombre']) : ''; ?>">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Capacidad Máxima</label>
+                  <input class="input" type="number" name="capacidad_maxima" required value="<?php echo $salonEditar ? $salonEditar['capacidad_maxima'] : ''; ?>">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Tipo de Salón</label>
+                  <input class="input" type="text" name="tipo_salon" required value="<?php echo $salonEditar ? htmlspecialchars($salonEditar['tipo_salon']) : ''; ?>">
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="field">
+                  <label class="label">Dirección</label>
+                  <input class="input" type="text" name="direccion" required value="<?php echo $salonEditar ? htmlspecialchars($salonEditar['direccion']) : ''; ?>">
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="field">
+                  <label class="label">Precio Base ($)</label>
+                  <input class="input" type="number" step="0.01" name="precio_base" required value="<?php echo $salonEditar ? $salonEditar['precio_base'] : ''; ?>">
+                </div>
+              </div>
+              <div class="column is-12">
+                <button type="submit" class="button <?php echo $salonEditar ? 'is-info' : 'is-warning'; ?> has-text-weight-bold">
+                  <?php echo $salonEditar ? 'Guardar Cambios' : 'Guardar Salón'; ?>
+                </button>
+                <?php if ($salonEditar): ?>
+                  <a href="admin.php" class="button is-light ml-2">Cancelar</a>
+                <?php endif; ?>
               </div>
             </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Categoría</label>
-                <input class="input" type="text" name="categoria" required value="<?php echo $servicioEditar ? htmlspecialchars($servicioEditar['categoria']) : ''; ?>" placeholder="Ej: Gastronomía">
-              </div>
-            </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Precio Base ($)</label>
-                <input class="input" type="number" step="0.01" name="precio_base" required value="<?php echo $servicioEditar ? $servicioEditar['precio_base'] : ''; ?>" placeholder="Ej: 50000">
-              </div>
-            </div>
-            <div class="column is-12">
-              <div class="field">
-                <label class="label">Descripción</label>
-                <textarea class="textarea" name="descripcion" placeholder="Detalle del servicio..."><?php echo $servicioEditar ? htmlspecialchars($servicioEditar['descripcion']) : ''; ?></textarea>
-              </div>
-            </div>
-            <div class="column is-12">
-              <button type="submit" class="button <?php echo $servicioEditar ? 'is-info' : 'is-warning'; ?> has-text-weight-bold">
-                <?php echo $servicioEditar ? 'Guardar Cambios Servicio' : 'Guardar Servicio'; ?>
-              </button>
-              <?php if ($servicioEditar): ?>
-                <a href="admin.php" class="button is-light ml-2">Cancelar</a>
-              <?php endif; ?>
-            </div>
-          </div>
-        </form>
+          </form>
 
-        <h3 class="title is-5 mt-5">Servicios Existentes</h3>
-        <div class="table-container">
-          <table class="table is-fullwidth is-striped is-hoverable">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Descripción</th>
-                <th>Precio Base</th>
-                <th class="has-text-centered">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (count($servicios) > 0): ?>
-                <?php foreach ($servicios as $serv): ?>
+          <h3 class="title is-5 mt-5">Salones Existentes</h3>
+          <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Capacidad</th>
+                  <th>Dirección</th>
+                  <th>Precio Base</th>
+                  <th>Tipo</th>
+                  <th class="has-text-centered">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($salones as $salon): ?>
                   <tr>
-                    <td><?php echo $serv['id_servicio']; ?></td>
-                    <td><strong><?php echo htmlspecialchars($serv['nombre_servicio']); ?></strong></td>
-                    <td><?php echo htmlspecialchars($serv['categoria']); ?></td>
-                    <td><?php echo htmlspecialchars($serv['descripcion']); ?></td>
-                    <td>$<?php echo number_format($serv['precio_base'], 2, ',', '.'); ?></td>
+                    <td><?php echo $salon['id_salon']; ?></td>
+                    <td><strong><?php echo htmlspecialchars($salon['nombre']); ?></strong></td>
+                    <td><?php echo $salon['capacidad_maxima']; ?> pers.</td>
+                    <td><?php echo htmlspecialchars($salon['direccion']); ?></td>
+                    <td>$<?php echo number_format($salon['precio_base'], 2, ',', '.'); ?></td>
+                    <td><?php echo htmlspecialchars($salon['tipo_salon']); ?></td>
                     <td class="has-text-centered">
-                      <a href="admin.php?editar_servicio=<?php echo $serv['id_servicio']; ?>" class="button is-small is-info mr-1" title="Modificar"><i class="fas fa-edit"></i></a>
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este servicio?');">
-                        <input type="hidden" name="accion" value="eliminar_servicio">
-                        <input type="hidden" name="id_servicio" value="<?php echo $serv['id_servicio']; ?>">
+                      <a href="admin.php?editar=<?php echo $salon['id_salon']; ?>" class="button is-small is-info mr-1" title="Modificar"><i class="fas fa-edit"></i></a>
+                      <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este salón?');">
+                        <input type="hidden" name="accion" value="eliminar_salon">
+                        <input type="hidden" name="id_salon" value="<?php echo $salon['id_salon']; ?>">
                         <button type="submit" class="button is-small is-danger" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
                       </form>
                     </td>
                   </tr>
                 <?php endforeach; ?>
-              <?php else: ?>
-                <tr>
-                  <td colspan="6" class="has-text-centered">No hay servicios registrados.</td>
-                </tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- SECCIÓN 3: ABM PERSONAL -->
-      <div id="abm-personal" class="abm-content box <?php echo $personalEditar ? '' : 'is-hidden'; ?>">
-        <h2 class="title is-4 has-text-warning-dark">Administrar Personal</h2> <br>
-        <p class="subtitle is-6">Gestioná los empleados, mozos, técnicos y coordinadores del salón.</p>
-
-        <form method="POST" class="box mb-5 has-background-white-ter">
-          <input type="hidden" name="accion" value="<?php echo $personalEditar ? 'modificar_personal' : 'crear_personal'; ?>">
-          <?php if ($personalEditar): ?>
-            <input type="hidden" name="id_personal" value="<?php echo $personalEditar['id_personal']; ?>">
-            <h3 class="title is-5 mb-3 has-text-info">Modificar Personal (ID: <?php echo $personalEditar['id_personal']; ?>)</h3>
-          <?php else: ?>
-            <h3 class="title is-5 mb-3">Agregar Nuevo Personal</h3>
-          <?php endif; ?>
-
-          <div class="columns is-multiline">
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Nombre</label>
-                <input class="input" type="text" name="nombre" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['nombre']) : ''; ?>" placeholder="Ej: Carlos">
-              </div>
-            </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Apellido</label>
-                <input class="input" type="text" name="apellido" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['apellido']) : ''; ?>" placeholder="Ej: Gómez">
-              </div>
-            </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">DNI / CUIT</label>
-                <input class="input" type="text" name="dni_cuit" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['dni_cuit']) : ''; ?>" placeholder="Ej: 20-33445566-9">
-              </div>
-            </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Teléfono</label>
-                <input class="input" type="text" name="telefono" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['telefono']) : ''; ?>" placeholder="Ej: 2914556677">
-              </div>
-            </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Email</label>
-                <input class="input" type="email" name="email" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['email']) : ''; ?>" placeholder="Ej: carlos@email.com">
-              </div>
-            </div>
-            <div class="column is-4">
-              <div class="field">
-                <label class="label">Tipo / Rol de Personal</label>
-                <input class="input" type="text" name="tipo_personal" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['tipo_personal']) : ''; ?>" placeholder="Ej: Parrillero / Animador">
-              </div>
-            </div>
-            <div class="column is-12">
-              <button type="submit" class="button <?php echo $personalEditar ? 'is-info' : 'is-warning'; ?> has-text-weight-bold">
-                <?php echo $personalEditar ? 'Guardar Cambios Personal' : 'Guardar Personal'; ?>
-              </button>
-              <?php if ($personalEditar): ?>
-                <a href="admin.php" class="button is-light ml-2">Cancelar</a>
-              <?php endif; ?>
-            </div>
+              </tbody>
+            </table>
           </div>
-        </form>
-
-        <h3 class="title is-5 mt-5">Personal Registrado</h3>
-        <div class="table-container">
-          <table class="table is-fullwidth is-striped is-hoverable">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre y Apellido</th>
-                <th>DNI / CUIT</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-                <th>Rol / Tipo</th>
-                <th class="has-text-centered">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (count($personalList) > 0): ?>
-                <?php foreach ($personalList as $p): ?>
-                  <tr>
-                    <td><?php echo $p['id_personal']; ?></td>
-                    <td><strong><?php echo htmlspecialchars($p['nombre'] . ' ' . $p['apellido']); ?></strong></td>
-                    <td><?php echo htmlspecialchars($p['dni_cuit']); ?></td>
-                    <td><?php echo htmlspecialchars($p['telefono']); ?></td>
-                    <td><?php echo htmlspecialchars($p['email']); ?></td>
-                    <td><span class="tag is-info is-light"><?php echo htmlspecialchars($p['tipo_personal']); ?></span></td>
-                    <td class="has-text-centered">
-                      <a href="admin.php?editar_personal=<?php echo $p['id_personal']; ?>" class="button is-small is-info mr-1" title="Modificar"><i class="fas fa-edit"></i></a>
-                      <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este empleado?');">
-                        <input type="hidden" name="accion" value="eliminar_personal">
-                        <input type="hidden" name="id_personal" value="<?php echo $p['id_personal']; ?>">
-                        <button type="submit" class="button is-small is-danger" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
-                      </form>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php else: ?>
-                <tr>
-                  <td colspan="7" class="has-text-centered">No hay personal registrado.</td>
-                </tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
         </div>
-      </div>
 
-      <!-- SECCIÓN 4: GESTIÓN DE RESERVAS (ADMINISTRADOR) -->
-      <div id="abm-reservas" class="abm-content box is-hidden">
-        <h2 class="title is-4 has-text-warning-dark">Notificaciones de Solicitudes de Reserva</h2><br>
-        <p class="subtitle is-6">Revisá las peticiones de los clientes, qué salón solicitaron, cuándo y tomá acción.</p>
+        <!-- SECCIÓN 2: ABM SERVICIOS -->
+        <div id="abm-servicios" class="abm-content box <?php echo $servicioEditar ? '' : 'is-hidden'; ?>">
+          <h2 class="title is-4 has-text-warning-dark">Administrar Servicios Adicionales</h2> <br>
+          <p class="subtitle is-6">Controlá los precios y detalles de catering, DJ, decoración y más.</p>
 
-        <div class="table-container">
-          <table class="table is-fullwidth is-striped is-hoverable">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Cliente / Teléfono</th>
-                <th>Salón Solicitado</th>
-                <th>Fecha del Evento</th>
-                <th>Método de Pago</th>
-                <th>Estado</th>
-                <th class="has-text-centered">Acciones (Aceptar / Rechazar)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (count($listadoReservas) > 0): ?>
-                <?php foreach ($listadoReservas as $res): ?>
-                  <tr>
-                    <td><?php echo $res['id_reserva']; ?></td>
-                    <td><strong><?php echo htmlspecialchars($res['cliente_nombre']); ?></strong><br><small><?php echo htmlspecialchars($res['telefono']); ?></small></td>
-                    <td><?php echo htmlspecialchars($res['salon_nombre']); ?></td>
-                    <td><?php echo htmlspecialchars($res['fecha_evento']); ?></td>
-                    <td><span class="tag is-light"><?php echo ucfirst($res['metodo_pago'] ?? 'efectivo'); ?></span></td>
-                    <td>
-                      <span class="tag <?php echo ($res['estado'] == 'Aprobada') ? 'is-success' : (($res['estado'] == 'Rechazada') ? 'is-danger' : 'is-warning'); ?>">
-                        <?php echo $res['estado']; ?>
-                      </span>
-                    </td>
-                    <td class="has-text-centered">
-                      <?php if ($res['estado'] == 'Pendiente'): ?>
-                        <form method="POST" style="display:inline;">
-                          <input type="hidden" name="id_reserva" value="<?php echo $res['id_reserva']; ?>">
-                          <button type="submit" name="accion_reserva" value="Aprobada" class="button is-small is-success mr-1" title="Aceptar Reserva">
-                            <i class="fas fa-check mr-1"></i> Aceptar
-                          </button>
-                          <button type="submit" name="accion_reserva" value="Rechazada" class="button is-small is-danger" title="Rechazar Reserva">
-                            <i class="fas fa-times mr-1"></i> Rechazar
-                          </button>
+          <form method="POST" class="box mb-5 has-background-white-ter">
+            <input type="hidden" name="accion" value="<?php echo $servicioEditar ? 'modificar_servicio' : 'crear_servicio'; ?>">
+            <?php if ($servicioEditar): ?>
+              <input type="hidden" name="id_servicio" value="<?php echo $servicioEditar['id_servicio']; ?>">
+              <h3 class="title is-5 mb-3 has-text-info">Modificar Servicio (ID: <?php echo $servicioEditar['id_servicio']; ?>)</h3>
+            <?php else: ?>
+              <h3 class="title is-5 mb-3">Agregar Nuevo Servicio</h3>
+            <?php endif; ?>
+
+            <div class="columns is-multiline">
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Nombre del Servicio</label>
+                  <input class="input" type="text" name="nombre_servicio" required value="<?php echo $servicioEditar ? htmlspecialchars($servicioEditar['nombre_servicio']) : ''; ?>" placeholder="Ej: Barra Libre">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Categoría</label>
+                  <input class="input" type="text" name="categoria" required value="<?php echo $servicioEditar ? htmlspecialchars($servicioEditar['categoria']) : ''; ?>" placeholder="Ej: Gastronomía">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Precio Base ($)</label>
+                  <input class="input" type="number" step="0.01" name="precio_base" required value="<?php echo $servicioEditar ? $servicioEditar['precio_base'] : ''; ?>" placeholder="Ej: 50000">
+                </div>
+              </div>
+              <div class="column is-12">
+                <div class="field">
+                  <label class="label">Descripción</label>
+                  <textarea class="textarea" name="descripcion" placeholder="Detalle del servicio..."><?php echo $servicioEditar ? htmlspecialchars($servicioEditar['descripcion']) : ''; ?></textarea>
+                </div>
+              </div>
+              <div class="column is-12">
+                <button type="submit" class="button <?php echo $servicioEditar ? 'is-info' : 'is-warning'; ?> has-text-weight-bold">
+                  <?php echo $servicioEditar ? 'Guardar Cambios Servicio' : 'Guardar Servicio'; ?>
+                </button>
+                <?php if ($servicioEditar): ?>
+                  <a href="admin.php" class="button is-light ml-2">Cancelar</a>
+                <?php endif; ?>
+              </div>
+            </div>
+          </form>
+
+          <h3 class="title is-5 mt-5">Servicios Existentes</h3>
+          <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Descripción</th>
+                  <th>Precio Base</th>
+                  <th class="has-text-centered">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (count($servicios) > 0): ?>
+                  <?php foreach ($servicios as $serv): ?>
+                    <tr>
+                      <td><?php echo $serv['id_servicio']; ?></td>
+                      <td><strong><?php echo htmlspecialchars($serv['nombre_servicio']); ?></strong></td>
+                      <td><?php echo htmlspecialchars($serv['categoria']); ?></td>
+                      <td><?php echo htmlspecialchars($serv['descripcion']); ?></td>
+                      <td>$<?php echo number_format($serv['precio_base'], 2, ',', '.'); ?></td>
+                      <td class="has-text-centered">
+                        <a href="admin.php?editar_servicio=<?php echo $serv['id_servicio']; ?>" class="button is-small is-info mr-1" title="Modificar"><i class="fas fa-edit"></i></a>
+                        <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este servicio?');">
+                          <input type="hidden" name="accion" value="eliminar_servicio">
+                          <input type="hidden" name="id_servicio" value="<?php echo $serv['id_servicio']; ?>">
+                          <button type="submit" class="button is-small is-danger" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
                         </form>
-                      <?php else: ?>
-                        <span class="tag is-light">Procesada</span>
-                      <?php endif; ?>
-                    </td>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php else: ?>
+                  <tr>
+                    <td colspan="6" class="has-text-centered">No hay servicios registrados.</td>
                   </tr>
-                <?php endforeach; ?>
-              <?php else: ?>
-                <tr>
-                  <td colspan="7" class="has-text-centered">No hay solicitudes de reserva registradas.</td>
-                </tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <!-- SECCIÓN 3: ABM PERSONAL -->
+        <div id="abm-personal" class="abm-content box <?php echo $personalEditar ? '' : 'is-hidden'; ?>">
+          <h2 class="title is-4 has-text-warning-dark">Administrar Personal</h2> <br>
+          <p class="subtitle is-6">Gestioná los empleados, mozos, técnicos y coordinadores del salón.</p>
+
+          <form method="POST" class="box mb-5 has-background-white-ter">
+            <input type="hidden" name="accion" value="<?php echo $personalEditar ? 'modificar_personal' : 'crear_personal'; ?>">
+            <?php if ($personalEditar): ?>
+              <input type="hidden" name="id_personal" value="<?php echo $personalEditar['id_personal']; ?>">
+              <h3 class="title is-5 mb-3 has-text-info">Modificar Personal (ID: <?php echo $personalEditar['id_personal']; ?>)</h3>
+            <?php else: ?>
+              <h3 class="title is-5 mb-3">Agregar Nuevo Personal</h3>
+            <?php endif; ?>
+
+            <div class="columns is-multiline">
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Nombre</label>
+                  <input class="input" type="text" name="nombre" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['nombre']) : ''; ?>" placeholder="Ej: Carlos">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Apellido</label>
+                  <input class="input" type="text" name="apellido" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['apellido']) : ''; ?>" placeholder="Ej: Gómez">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">DNI / CUIT</label>
+                  <input class="input" type="text" name="dni_cuit" required value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['dni_cuit']) : ''; ?>" placeholder="Ej: 20-33445566-9">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Teléfono</label>
+                  <input class="input" type="text" name="telefono" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['telefono']) : ''; ?>" placeholder="Ej: 2914556677">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Email</label>
+                  <input class="input" type="email" name="email" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['email']) : ''; ?>" placeholder="Ej: carlos@email.com">
+                </div>
+              </div>
+              <div class="column is-4">
+                <div class="field">
+                  <label class="label">Tipo / Rol de Personal</label>
+                  <input class="input" type="text" name="tipo_personal" value="<?php echo $personalEditar ? htmlspecialchars($personalEditar['tipo_personal']) : ''; ?>" placeholder="Ej: Parrillero / Animador">
+                </div>
+              </div>
+              <div class="column is-12">
+                <button type="submit" class="button <?php echo $personalEditar ? 'is-info' : 'is-warning'; ?> has-text-weight-bold">
+                  <?php echo $personalEditar ? 'Guardar Cambios Personal' : 'Guardar Personal'; ?>
+                </button>
+                <?php if ($personalEditar): ?>
+                  <a href="admin.php" class="button is-light ml-2">Cancelar</a>
+                <?php endif; ?>
+              </div>
+            </div>
+          </form>
+
+          <h3 class="title is-5 mt-5">Personal Registrado</h3>
+          <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre y Apellido</th>
+                  <th>DNI / CUIT</th>
+                  <th>Teléfono</th>
+                  <th>Email</th>
+                  <th>Rol / Tipo</th>
+                  <th class="has-text-centered">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (count($personalList) > 0): ?>
+                  <?php foreach ($personalList as $p): ?>
+                    <tr>
+                      <td><?php echo $p['id_personal']; ?></td>
+                      <td><strong><?php echo htmlspecialchars($p['nombre'] . ' ' . $p['apellido']); ?></strong></td>
+                      <td><?php echo htmlspecialchars($p['dni_cuit']); ?></td>
+                      <td><?php echo htmlspecialchars($p['telefono']); ?></td>
+                      <td><?php echo htmlspecialchars($p['email']); ?></td>
+                      <td><span class="tag is-info is-light"><?php echo htmlspecialchars($p['tipo_personal']); ?></span></td>
+                      <td class="has-text-centered">
+                        <a href="admin.php?editar_personal=<?php echo $p['id_personal']; ?>" class="button is-small is-info mr-1" title="Modificar"><i class="fas fa-edit"></i></a>
+                        <form method="POST" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este empleado?');">
+                          <input type="hidden" name="accion" value="eliminar_personal">
+                          <input type="hidden" name="id_personal" value="<?php echo $p['id_personal']; ?>">
+                          <button type="submit" class="button is-small is-danger" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                        </form>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php else: ?>
+                  <tr>
+                    <td colspan="7" class="has-text-centered">No hay personal registrado.</td>
+                  </tr>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECCIÓN 4: GESTIÓN DE RESERVAS (ADMINISTRADOR) -->
+        <div id="abm-reservas" class="abm-content box is-hidden">
+          <h2 class="title is-4 has-text-warning-dark">Notificaciones de Solicitudes de Reserva</h2><br>
+          <p class="subtitle is-6">Revisá las peticiones de los clientes, qué salón solicitaron, cuándo y tomá acción.</p>
+
+          <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Cliente / Teléfono</th>
+                  <th>Salón Solicitado</th>
+                  <th>Fecha del Evento</th>
+                  <th>Método de Pago</th>
+                  <th>Estado</th>
+                  <th class="has-text-centered">Acciones (Aceptar / Rechazar)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (count($listadoReservas) > 0): ?>
+                  <?php foreach ($listadoReservas as $res): ?>
+                    <tr>
+                      <td><?php echo $res['id_reserva']; ?></td>
+                      <td><strong><?php echo htmlspecialchars($res['cliente_nombre']); ?></strong><br><small><?php echo htmlspecialchars($res['telefono']); ?></small></td>
+                      <td><?php echo htmlspecialchars($res['salon_nombre']); ?></td>
+                      <td><?php echo htmlspecialchars($res['fecha_evento']); ?></td>
+                      <td><span class="tag is-light"><?php echo ucfirst($res['metodo_pago'] ?? 'efectivo'); ?></span></td>
+                      <td>
+                        <span class="tag <?php echo ($res['estado'] == 'Aprobada') ? 'is-success' : (($res['estado'] == 'Rechazada') ? 'is-danger' : 'is-warning'); ?>">
+                          <?php echo $res['estado']; ?>
+                        </span>
+                      </td>
+                      <td class="has-text-centered">
+                        <?php if ($res['estado'] == 'Pendiente'): ?>
+                          <form method="POST" style="display:inline;">
+                            <input type="hidden" name="id_reserva" value="<?php echo $res['id_reserva']; ?>">
+                            <button type="submit" name="accion_reserva" value="Aprobada" class="button is-small is-success mr-1" title="Aceptar Reserva">
+                              <i class="fas fa-check mr-1"></i> Aceptar
+                            </button>
+                            <button type="submit" name="accion_reserva" value="Rechazada" class="button is-small is-danger" title="Rechazar Reserva">
+                              <i class="fas fa-times mr-1"></i> Rechazar
+                            </button>
+                          </form>
+                        <?php else: ?>
+                          <span class="tag is-light">Procesada</span>
+                        <?php endif; ?>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php else: ?>
+                  <tr>
+                    <td colspan="7" class="has-text-centered">No hay solicitudes de reserva registradas.</td>
+                  </tr>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
+    </section>
 
-    </div>
-  </section>
+    <!-- SCRIPT PARA CAMBIAR ENTRE PESTAÑAS -->
+    <script>
+      document.querySelectorAll('#admin-tabs li').forEach(tab => {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('#admin-tabs li').forEach(item => item.classList.remove('is-active'));
+          this.classList.add('is-active');
 
-  <!-- SCRIPT PARA CAMBIAR ENTRE PESTAÑAS -->
-  <script>
-    document.querySelectorAll('#admin-tabs li').forEach(tab => {
-      tab.addEventListener('click', function() {
-        document.querySelectorAll('#admin-tabs li').forEach(item => item.classList.remove('is-active'));
-        this.classList.add('is-active');
-
-        const target = this.getAttribute('data-target');
-        document.querySelectorAll('.abm-content').forEach(content => {
-          content.classList.add('is-hidden');
+          const target = this.getAttribute('data-target');
+          document.querySelectorAll('.abm-content').forEach(content => {
+            content.classList.add('is-hidden');
+          });
+          document.getElementById(target).classList.remove('is-hidden');
         });
-        document.getElementById(target).classList.remove('is-hidden');
       });
-    });
-  </script>
+    </script>
+  <?php endif; ?>
 </body>
 </html>
