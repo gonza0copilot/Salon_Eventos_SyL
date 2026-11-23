@@ -15,9 +15,13 @@ if (empty($identificador) || empty($password)) {
 }
 
 try {
-    // 1. Buscar primero en la tabla USUARIO por nombre o email (para el Administrador y personal)
-    $stmtAdmin = $pdo->prepare("SELECT * FROM usuario WHERE email = ? OR nombre = ? LIMIT 1");
-    $stmtAdmin->execute([$identificador, $identificador]);
+    // 1. Buscar primero en la tabla USUARIO por email, nombre o nombre completo (para el Administrador y personal)
+    $stmtAdmin = $pdo->prepare("SELECT * FROM usuario 
+        WHERE LOWER(TRIM(email)) = LOWER(TRIM(?)) 
+           OR LOWER(TRIM(nombre)) = LOWER(TRIM(?)) 
+           OR LOWER(TRIM(CONCAT(nombre, ' ', apellido))) = LOWER(TRIM(?)) 
+        LIMIT 1");
+    $stmtAdmin->execute([$identificador, $identificador, $identificador]);
     $usuario = $stmtAdmin->fetch();
 
     if ($usuario) {
@@ -42,9 +46,13 @@ try {
         }
     }
 
-    // 2. Si no es un usuario/admin, buscar en la tabla CLIENTE por nombre o email
-    $stmtCliente = $pdo->prepare("SELECT * FROM cliente WHERE email = ? OR nombre = ? LIMIT 1");
-    $stmtCliente->execute([$identificador, $identificador]);
+    // 2. Si no es un usuario/admin, buscar en la tabla CLIENTE por email, nombre o nombre completo
+    $stmtCliente = $pdo->prepare("SELECT * FROM cliente 
+        WHERE LOWER(TRIM(email)) = LOWER(TRIM(?)) 
+           OR LOWER(TRIM(nombre)) = LOWER(TRIM(?)) 
+           OR LOWER(TRIM(CONCAT(nombre, ' ', apellido))) = LOWER(TRIM(?)) 
+        LIMIT 1");
+    $stmtCliente->execute([$identificador, $identificador, $identificador]);
     $user = $stmtCliente->fetch();
 
     if ($user) {
