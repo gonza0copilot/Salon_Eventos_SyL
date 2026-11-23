@@ -11,13 +11,14 @@ if ($data) {
     $turno = $data['turno'] ?? '';
     $montoTotal = $data['monto_total'] ?? 0;
     $metodoPago = trim($data['metodo_pago'] ?? 'efectivo'); // 'efectivo' o 'transferencia'
-    
+    $servicios = $data['servicios'] ?? [];
+
     $nombre = trim($data['nombre'] ?? '');
     $dni = trim($data['dni'] ?? '');
     $telefono = trim($data['telefono'] ?? '');
 
     if (empty($emailCliente) || empty($fechaEvento)) {
-        echo json_encode(["status" => "error", "message" => "Faltan datos obligatorios para la reserva."]);
+        echo json_encode(["status" => "error", "message" => "Faltan datos obligatorios para la reserva."], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -29,7 +30,7 @@ if ($data) {
             echo json_encode([
                 "status" => "error", 
                 "message" => "Lo sentimos, este salón ya se encuentra reservado o con solicitud pendiente para esa fecha."
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             exit();
         }
 
@@ -62,15 +63,33 @@ if ($data) {
         $stmtPago = $pdo->prepare($sqlPago);
         $stmtPago->execute([$idReserva, $montoTotal, $metodoPago]);
 
+        // 3. Registrar servicios adicionales elegidos en detalle_reserva_servicio
+        if (!empty($servicios) && is_array($servicios)) {
+            $stmtPrecioServ = $pdo->prepare("SELECT precio_base FROM servicio WHERE id_servicio = ?");
+            $stmtDetalle = $pdo->prepare("INSERT INTO detalle_reserva_servicio (id_reserva, id_servicio, cantidad, precio_final) VALUES (?, ?, 1, ?)");
+
+            foreach ($servicios as $idServicio) {
+                $idServicioLimpio = intval($idServicio);
+                if ($idServicioLimpio > 0) {
+                    $stmtPrecioServ->execute([$idServicioLimpio]);
+                    $precioServ = $stmtPrecioServ->fetchColumn();
+
+                    if ($precioServ !== false) {
+                        $stmtDetalle->execute([$idReserva, $idServicioLimpio, $precioServ]);
+                    }
+                }
+            }
+        }
+
         echo json_encode([
             "status" => "success", 
             "message" => "¡Su petición ha sido enviada con éxito! El administrador la revisará a la brevedad."
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
 
     } catch (\PDOException $e) {
-        echo json_encode(["status" => "error", "message" => "Error al procesar la solicitud: " . $e->getMessage()]);
+        echo json_encode(["status" => "error", "message" => "Error al procesar la solicitud: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
 } else {
-    echo json_encode(["status" => "error", "message" => "No se recibieron datos."]);
+    echo json_encode(["status" => "error", "message" => "No se recibieron datos."], JSON_UNESCAPED_UNICODE);
 }
 ?>
