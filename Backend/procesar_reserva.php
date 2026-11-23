@@ -50,6 +50,15 @@ if ($data) {
 
         if ($cliente) {
             $idCliente = $cliente['id_cliente'];
+
+            if (!empty($dni) || !empty($telefono)) {
+                $sqlUpdateCliente = "UPDATE cliente SET 
+                    dni_cuit = CASE WHEN ? != '' THEN ? ELSE dni_cuit END,
+                    telefono = CASE WHEN ? != '' THEN ? ELSE telefono END
+                    WHERE id_cliente = ?";
+                $stmtUpdateCliente = $pdo->prepare($sqlUpdateCliente);
+                $stmtUpdateCliente->execute([$dni, $dni, $telefono, $telefono, $idCliente]);
+            }
         } else {
             $passTemp = password_hash("123456", PASSWORD_DEFAULT);
             $stmtInsertCliente = $pdo->prepare("INSERT INTO cliente (nombre, apellido, dni_cuit, telefono, email, contrasena) VALUES (?, ?, ?, ?, ?, ?)");
