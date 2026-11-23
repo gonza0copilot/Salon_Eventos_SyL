@@ -48,8 +48,16 @@ if ($data) {
             $idCliente = $pdo->lastInsertId();
         }
 
-        $horaInicio = ($turno === 'Tarde') ? '12:00:00' : '20:00:00';
-        $horaFin = ($turno === 'Tarde') ? '19:00:00' : '04:00:00';
+        if ($turno === 'Tarde') {
+            $horaInicio = '12:00:00';
+            $horaFin = '19:00:00';
+        } elseif ($turno === 'Día completo') {
+            $horaInicio = '10:00:00';
+            $horaFin = '19:00:00';
+        } else {
+            $horaInicio = '20:00:00';
+            $horaFin = '04:00:00';
+        }
         $cantidadInvitados = 100; 
 
         // 1. Insertar la reserva con estado inicial "Pendiente"
