@@ -202,6 +202,21 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
   const fechaInput = document.getElementById('fecha-evento');
   const fechaEvento = fechaInput ? fechaInput.value : '';
 
+  const selectTurno = document.getElementById('turno-evento') || (formBox ? formBox.querySelector('select:not(#opcion-menu)') : null);
+  let turnoSeleccionado = "Noche";
+  if (selectTurno && selectTurno.value) {
+    const valorTurno = selectTurno.value.trim();
+    if (valorTurno.toLowerCase().startsWith('día completo') || valorTurno.toLowerCase().startsWith('dia completo')) {
+      turnoSeleccionado = "Día completo";
+    } else if (valorTurno.toLowerCase().startsWith('tarde')) {
+      turnoSeleccionado = "Tarde";
+    } else if (valorTurno.toLowerCase().startsWith('noche')) {
+      turnoSeleccionado = "Noche";
+    } else {
+      turnoSeleccionado = valorTurno;
+    }
+  }
+
   const txtNombre = formBox ? formBox.querySelector('input[type="text"]') : null;
   const txtDni = document.getElementById('dni-cliente');
   const txtTel = document.getElementById('telefono-cliente');
@@ -233,12 +248,10 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     serviciosSeleccionados.push(parseInt(checkbox.value, 10));
   });
 
-  
-
   const datosReserva = {
     id_salon: idSalon,
     fecha_evento: fechaEvento,
-    turno: "Noche", 
+    turno: turnoSeleccionado,
     monto_total: montoTotal,
     metodo_pago: metodoPago, 
     nombre: txtNombre ? txtNombre.value : "Cliente Web",
