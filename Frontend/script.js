@@ -77,6 +77,10 @@ function manejarLogin(event) {
           }
         }
 
+        const inputNombreCliente = document.getElementById('nombre-cliente');
+        if (inputNombreCliente && data.nombre) {
+          inputNombreCliente.value = data.nombre;
+        }
 
       } else {
         alert("Error: " + data.message);
@@ -131,11 +135,13 @@ function cerrarSesion() {
   const mainApp = document.getElementById('main-app');
   const loginPassword = document.getElementById('login-password');
   const formLogin = document.getElementById('form-login');
+  const inputNombreCliente = document.getElementById('nombre-cliente');
 
   if (loginSection) loginSection.classList.remove('is-hidden');
   if (mainApp) mainApp.classList.add('is-hidden');
   if (loginPassword) loginPassword.value = '';
   if (formLogin) formLogin.reset();
+  if (inputNombreCliente) inputNombreCliente.value = '';
 }
 
 // ================= GALERÍA Y PRECIOS DE SALONES =================
@@ -217,7 +223,7 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     }
   }
 
-  const txtNombre = formBox ? formBox.querySelector('input[type="text"]') : null;
+  const txtNombre = document.getElementById('nombre-cliente') || (formBox ? formBox.querySelector('input[type="text"]') : null);
   const txtDni = document.getElementById('dni-cliente');
   const txtTel = document.getElementById('telefono-cliente');
   const elementoPrecio = document.getElementById('precio-final');
@@ -232,14 +238,18 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     return;
   }
 
-  // RECUPERAR EL EMAIL DEL USUARIO LOGUEADO DESDE LOCALSTORAGE
+  // RECUPERAR EL EMAIL Y NOMBRE DEL USUARIO LOGUEADO DESDE LOCALSTORAGE
   const sesionGuardada = localStorage.getItem('sesion_usuario');
   let emailCliente = "cliente@evaluacion.com"; // Resguardo por defecto si no hay sesión
-  
+  let nombreSesion = "";
+
   if (sesionGuardada) {
     const sesion = JSON.parse(sesionGuardada);
     if (sesion.email) {
       emailCliente = sesion.email;
+    }
+    if (sesion.nombre) {
+      nombreSesion = sesion.nombre;
     }
   }
 
@@ -248,13 +258,15 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     serviciosSeleccionados.push(parseInt(checkbox.value, 10));
   });
 
+  const nombreFinal = (txtNombre && txtNombre.value.trim()) ? txtNombre.value.trim() : (nombreSesion || "Cliente Web");
+
   const datosReserva = {
     id_salon: idSalon,
     fecha_evento: fechaEvento,
     turno: turnoSeleccionado,
     monto_total: montoTotal,
     metodo_pago: metodoPago, 
-    nombre: txtNombre ? txtNombre.value : "Cliente Web",
+    nombre: nombreFinal,
     dni: txtDni.value,
     telefono: txtTel.value,
     email: emailCliente, // <--- SE ENVÍA EL CORREO REAL DEL CLIENTE AUTENTICADO
@@ -365,6 +377,11 @@ document.addEventListener('DOMContentLoaded', () => {
           userBadge.className = 'tag is-success is-medium mr-3';
           if (adminPanel) adminPanel.classList.add('is-hidden');
         }
+      }
+
+      const inputNombreCliente = document.getElementById('nombre-cliente');
+      if (inputNombreCliente && sesion.nombre && !inputNombreCliente.value) {
+        inputNombreCliente.value = sesion.nombre;
       }
     } else {
       localStorage.removeItem('sesion_usuario');
