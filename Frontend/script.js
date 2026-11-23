@@ -48,9 +48,10 @@ function manejarLogin(event) {
 
         // Verificación segura basada en el rol que devuelve la base de datos
         const esAdmin = (data.rol === 'Administrador');
+        const emailRealSesion = data.email || (email.includes('@') ? email : '');
         const datosSesion = {
           nombre: data.nombre,
-          email: email, // <--- GUARDAMOS EL EMAIL REAL DEL USUARIO LOGUEADO
+          email: emailRealSesion, // <--- GUARDAMOS EL EMAIL REAL DEL USUARIO LOGUEADO
           rol: data.rol,
           esAdmin: esAdmin,
           timestamp: new Date().getTime()
