@@ -126,9 +126,9 @@
                 <label class="label">Turno / Horario</label>
                 <div class="control">
                   <div class="select is-fullwidth">
-                    <select>
-                      <option>Noche (20:00 a 04:00 hs)</option>
-                      <option>Tarde (12:00 a 19:00 hs)</option>
+                    <select id="turno-evento">
+                      <option value="Noche">Noche (20:00 a 04:00 hs)</option>
+                      <option value="Tarde">Tarde (12:00 a 19:00 hs)</option>
                     </select>
                   </div>
                 </div>
@@ -148,7 +148,8 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" value="1" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
+                  <input type="checkbox" value="1" class="mr-2 servicio-check" data-precio="50000"
+                    onchange="calcularTotal()">
                   <span class="has-text-weight-semibold"><i class="fas fa-compact-disc text-primary mr-1"></i> DJ y
                     Sonido ($50.000)</span>
                 </label>
@@ -160,8 +161,8 @@
               <div class="service-checkbox-card-catering">
                 <div class="is-flex is-align-items-center mb-2">
                   <label class="checkbox is-flex is-align-items-center mb-0" style="cursor: pointer;">
-                    <input type="checkbox" value="2" id="check-catering" class="mr-2  servicio-check" data-precio="85000"
-                      onchange="toggleCateringMenu();calcularTotal();">
+                    <input type="checkbox" value="2" id="check-catering" class="mr-2  servicio-check"
+                      data-precio="85000" onchange="toggleCateringMenu();calcularTotal();">
                     <span class="has-text-weight-semibold"><i class="fas fa-utensils text-success mr-1"></i> Catering /
                       Menú - $85.000 (Seleccionar opción)</span>
                   </label>
@@ -188,7 +189,8 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" value="3" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
+                  <input type="checkbox" value="3" class="mr-2 servicio-check" data-precio="50000"
+                    onchange="calcularTotal()">
                   <span class="has-text-weight-semibold"><i class="fas fa-fan text-danger mr-1"></i> Decoración y
                     Ambientación ($50.000)</span>
                 </label>
@@ -199,7 +201,8 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" value="4" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
+                  <input type="checkbox" value="4" class="mr-2 servicio-check" data-precio="50000"
+                    onchange="calcularTotal()">
                   <span class="has-text-weight-semibold"><i class="fas fa-shield-alt text-dark mr-1"></i> Seguridad y
                     Limpieza ($50.000)</span>
                 </label>
@@ -210,7 +213,8 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" value="5" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
+                  <input type="checkbox" value="5" class="mr-2 servicio-check" data-precio="50000"
+                    onchange="calcularTotal()">
                   <span class="has-text-weight-semibold"><i class="fas fa-camera text-info mr-1"></i> Fotografía y
                     Video ($50.000)</span>
                 </label>
@@ -221,7 +225,8 @@
             <div class="column is-6">
               <div class="service-checkbox-card">
                 <label class="checkbox is-flex is-align-items-center w-100" style="cursor: pointer;">
-                  <input type="checkbox" value="6" class="mr-2 servicio-check" data-precio="50000" onchange="calcularTotal()">
+                  <input type="checkbox" value="6" class="mr-2 servicio-check" data-precio="50000"
+                    onchange="calcularTotal()">
                   <span class="has-text-weight-semibold"><i class="fas fa-glass-cheers text-warning mr-1"></i> Barra
                     Libre / Coctelería ($50.000)</span>
                 </label>
