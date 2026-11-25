@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Impide seleccionar fechas anteriores al día de hoy en el campo de fecha del evento
+  // Impide seleccionar fechas anteriores al día actual en el campo de fecha del evento
   const inputFecha = document.getElementById('fecha-evento');
   if (inputFecha) {
     inputFecha.min = new Date().toISOString().split('T')[0];
