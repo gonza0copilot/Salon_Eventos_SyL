@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- Encabezado del documento:  título de la pestaña y hojas de estilo (Bulma) -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
 
 <body>
   <!-- ================= SECCIÓN 1: LOGIN / REGISTRO ================= -->
+  <!-- Contenedor de autenticación: se muestra cuando no hay sesión activa y se oculta al iniciar sesión -->
   <section id="login-section" class="hero is-dark is-fullheight is-hidden">
     <div class="hero-body">
       <div class="container">
@@ -20,6 +22,7 @@
           <div class="column is-5-tablet is-4-desktop">
 
             <div class="box">
+              <!-- Nombre del sistema -->
               <h2 class="title is-4 has-text-centered mb-4">Salon_Eventos_SyL</h2>
 
               <!-- Pestañas para cambiar entre Iniciar Sesión y Registrarse -->
@@ -30,8 +33,9 @@
                 </ul>
               </div>
 
-              <!-- Formulario de Login -->
+              <!-- Formulario de Login: envía email/usuario y contraseña a manejarLogin() en script.js -->
               <form id="form-login" onsubmit="manejarLogin(event)">
+                <!-- Campo de identificación (acepta correo electrónico o nombre de usuario) -->
                 <div class="field">
                   <label class="label">Email o Usuario</label>
                   <div class="control has-icons-left">
@@ -40,24 +44,25 @@
                   </div>
                 </div>
 
+                <!-- Campo de contraseña -->
                 <div class="field">
                   <label class="label">Contraseña</label>
                   <div class="control has-icons-left">
                     <input class="input" type="password" id="login-password" placeholder="Tu contraseña" required>
                     <span class="icon is-small is-left"><i class="fas fa-lock"></i></span>
                   </div>
-                  <p class="help is-info">Tip: Usa la contraseña <strong>admin123</strong> para ingresar como
-                    Administrador.</p>
                 </div>
 
+                <!-- Botón de envío para iniciar sesión -->
                 <div class="field mt-4">
                   <button type="submit" class="button is-warning is-fullwidth has-text-weight-bold">Iniciar
                     Sesión</button>
                 </div>
               </form>
 
-              <!-- Formulario de Registro (Oculto por defecto) -->
+              <!-- Formulario de Registro (Oculto por defecto): crea una cuenta nueva vía manejarRegistro() -->
               <form id="form-register" class="is-hidden" onsubmit="manejarRegistro(event)">
+                <!-- Campo de nombre completo del cliente -->
                 <div class="field">
                   <label class="label">Nombre Completo</label>
                   <div class="control has-icons-left">
@@ -66,6 +71,7 @@
                   </div>
                 </div>
 
+                <!-- Campo de correo electrónico -->
                 <div class="field">
                   <label class="label">Correo Electrónico</label>
                   <div class="control has-icons-left">
@@ -74,6 +80,7 @@
                   </div>
                 </div>
 
+                <!-- Campo de contraseña para la nueva cuenta -->
                 <div class="field">
                   <label class="label">Contraseña</label>
                   <div class="control has-icons-left">
@@ -82,6 +89,7 @@
                   </div>
                 </div>
 
+                <!-- Botón de registro -->
                 <div class="field mt-4">
                   <button type="submit" class="button is-success is-fullwidth has-text-weight-bold">Registrarse</button>
                 </div>
@@ -96,11 +104,13 @@
   </section>
 
   <!-- ================= SECCIÓN 2: PÁGINA PRINCIPAL ================= -->
+  <!-- Contenedor principal de la aplicación una vez autenticado el usuario -->
   <div id="main-app" >
 
-    <!-- Barra de Navegación -->
+    <!-- Barra de Navegación superior: marca, enlaces a salones, etiqueta de usuario y botón cerrar sesión -->
     <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
       <div class="container">
+        <!-- Marca del sitio y botón hamburguesa para dispositivos móviles -->
         <div class="navbar-brand">
           <a class="navbar-item has-text-weight-bold has-text-warning" href="#">
             <i class="fas fa-star mr-2"></i> Salon_Eventos_SyL
@@ -114,11 +124,12 @@
           </a>
         </div>
 
+        <!-- Enlaces de navegación principales -->
         <div id="navbarBasicExample" class="navbar-menu">
           <div class="navbar-start">
             <a class="navbar-item">Inicio</a>
 
-            <!-- Menú desplegable con salones -->
+            <!-- Menú desplegable con accesos directos a las páginas de cada salón -->
             <div class="navbar-item has-dropdown is-hoverable">
               <a class="navbar-link">Explorar Salones</a>
               <div class="navbar-dropdown">
@@ -131,6 +142,7 @@
             </div>
           </div>
 
+          <!-- Lado derecho del menú: muestra el rol/nombre del usuario actual y permite cerrar sesión -->
           <div class="navbar-end">
             <div class="navbar-item">
               <span id="user-badge" class="tag is-warning is-medium mr-3">Usuario</span>
@@ -147,11 +159,12 @@
     <section class="hero hero-background is-large">
       <div class="hero-body">
         <div class="container has-text-centered">
-          <h1 class="title is-2 has-text-white mb-3">Encontrá el espacio perfecto para tu evento</h1>
+          <!-- Título y subtítulo de bienvenida -->
+          <h1 class="title is-2 has-text-white mb-3">Encontrá el espacio perfecto para tu evento</h1> <br>
           <p class="subtitle is-5 has-text-light mb-6">Buscá por nombre exacto o filtrá según la cantidad de invitados.
           </p>
 
-          <!-- Barra de Búsqueda -->
+          <!-- Barra de Búsqueda: filtra salones por nombre o capacidad ejecutando realizarBusqueda() -->
           <div class="box max-w-lg mx-auto p-4 has-background-white-ter" style="max-width: 600px; margin: 0 auto;">
             <div class="field is-grouped">
               <div class="control is-expanded">
@@ -165,13 +178,12 @@
               </div>
             </div>
           </div>
-          <!-- AGREGAR AQUÍ EL CONTENEDOR DE RESULTADOS -->
+
+          <!-- Contenedor dinámico donde se renderizan las tarjetas de resultados de la búsqueda -->
           <div id="resultados-busqueda" class="columns is-centered is-multiline mt-5"
             style="max-width: 900px; margin: 0 auto;"></div>
 
-
-
-          <!-- Panel exclusivo para Administrador -->
+          <!-- Panel exclusivo para Administrador: visible solo cuando el usuario tiene rol de Administrador -->
           <div id="admin-panel" class="notification is-danger is-light mt-6 is-hidden"
             style="max-width: 600px; margin: 0 auto;">
             <h3 class="title is-5 has-text-danger-dark"><i class="fas fa-user-shield mr-2"></i> Panel de Control de
@@ -186,6 +198,8 @@
         </div>
       </div>
     </section>
+
+    <!-- Scripts de lógica principal de la interfaz y consultas/integración externa -->
     <script src="script.js"></script>
     <script src="API.js"></script>
 
