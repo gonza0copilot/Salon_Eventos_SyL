@@ -29,6 +29,16 @@ if ($data) {
         exit();
     }
 
+    // Restricción de anticipación: impide reservar para el día actual o fechas pasadas (mínimo a partir de mañana)
+    $hoy = date('Y-m-d');
+    if ($fechaEvento <= $hoy) {
+        echo json_encode([
+            "status" => "error",
+            "message" => "No se permiten reservas para el mismo día ni para fechas pasadas. Seleccioná una fecha a partir de mañana."
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
     try {
         // Consulta el precio base vigente del salón seleccionado desde la tabla salon
         $stmtSalon = $pdo->prepare("SELECT precio_base FROM salon WHERE id_salon = ?");
