@@ -1,8 +1,11 @@
 <?php
+// Inicia o reanuda la sesión PHP en el servidor para verificar el rol del usuario
 session_start();
+
+// Incluye la conexión PDO ($pdo) a la base de datos salon_eventos_syl
 require_once 'conexion.php';
 
-// Cerrar sesión de administrador
+// Cierra la sesión de administrador si se solicita por GET (?logout=1) y recarga admin.php
 if (isset($_GET['logout'])) {
     unset($_SESSION['rol'], $_SESSION['usuario_id'], $_SESSION['usuario_nombre'], $_SESSION['usuario_email']);
     header("Location: admin.php");
@@ -11,7 +14,7 @@ if (isset($_GET['logout'])) {
 
 $errorLogin = "";
 
-// Procesar login directo de administrador si no está autenticado
+// Procesa el formulario de acceso directo para administrador cuando no hay sesión válida
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_admin'])) {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -19,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_admin'])) {
     if ($email === '' || $password === '') {
         $errorLogin = "Por favor ingresá tu correo electrónico y contraseña.";
     } else {
+        // Busca el usuario por correo y valida contraseña hasheada + rol Administrador
         $stmtAuth = $pdo->prepare("SELECT id_usuario, nombre, apellido, email, rol, contrasena FROM usuario WHERE email = ? LIMIT 1");
         $stmtAuth->execute([$email]);
         $usuarioAuth = $stmtAuth->fetch(PDO::FETCH_ASSOC);
@@ -28,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_admin'])) {
             password_verify($password, $usuarioAuth['contrasena']) &&
             $usuarioAuth['rol'] === 'Administrador'
         ) {
+            // Guarda los datos de sesión autenticada del administrador
             $_SESSION['usuario_id'] = $usuarioAuth['id_usuario'];
             $_SESSION['usuario_nombre'] = $usuarioAuth['nombre'] . ' ' . $usuarioAuth['apellido'];
             $_SESSION['usuario_email'] = $usuarioAuth['email'];
@@ -41,8 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_admin'])) {
     }
 }
 
+// Bandera booleana que habilita el panel administrativo solo si existe sesión de Administrador
 $esAdmin = isset($_SESSION['rol']) && $_SESSION['rol'] === 'Administrador';
 
+// Traduce el parámetro ?status de la URL a un mensaje amigable de confirmación
 $mensaje = "";
 if ($esAdmin && isset($_GET['status'])) {
     if ($_GET['status'] == 'creado') $mensaje = "¡Salón agregado con éxito!";
@@ -57,17 +64,18 @@ if ($esAdmin && isset($_GET['status'])) {
     if ($_GET['status'] == 'reserva_actualizada') $mensaje = "¡Estado de la reserva actualizado con éxito!";
 }
 
+// Procesa envíos POST del panel (aprobación/rechazo de reservas y operaciones ABM) solo para administradores
 if ($esAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['login_admin'])) {
     // ================= PROCESAR ACCIONES DE RESERVA =================
     if (isset($_POST['accion_reserva'])) {
         $idReserva = intval($_POST['id_reserva']);
         $nuevaAccion = $_POST['accion_reserva']; // 'Aprobada' o 'Rechazada'
 
-        // Actualizar estado en la tabla reserva
+        // Actualiza el estado de la solicitud en la tabla reserva
         $stmtUpd = $pdo->prepare("UPDATE reserva SET estado = ? WHERE id_reserva = ?");
         $stmtUpd->execute([$nuevaAccion, $idReserva]);
         
-        // Actualizar estado en la tabla pago
+        // Sincroniza el estado en la tabla pago asociada a la reserva
         $stmtPagoUpd = $pdo->prepare("UPDATE pago SET estado = ? WHERE id_reserva = ?");
         $stmtPagoUpd->execute([$nuevaAccion, $idReserva]);
 
@@ -79,7 +87,7 @@ if ($esAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['login_ad
     if (isset($_POST['accion'])) {
         $accion = $_POST['accion'];
 
-        // SALONES (ABM)
+        // SALONES (ABM): Alta, modificación y baja de salones
         if ($accion === 'crear_salon') {
             $nombre = trim($_POST['nombre']);
             $capacidad = intval($_POST['capacidad_maxima']);
@@ -127,7 +135,7 @@ if ($esAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['login_ad
             }
         }
 
-        // SERVICIOS (ABM)
+        // SERVICIOS (ABM): Alta, modificación y baja de servicios adicionales
         if ($accion === 'crear_servicio') {
             $nombre = trim($_POST['nombre_servicio']);
             $descripcion = trim($_POST['descripcion']);
@@ -173,7 +181,7 @@ if ($esAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['login_ad
             }
         }
 
-        // PERSONAL (ABM)
+        // PERSONAL (ABM): Alta, modificación y baja de empleados/staff
         if ($accion === 'crear_personal') {
             $nombre = trim($_POST['nombre']);
             $apellido = trim($_POST['apellido']);
@@ -225,6 +233,7 @@ if ($esAdmin && $_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['login_ad
     }
 }
 
+// Variables para cargar el registro a editar y los listados de tablas del panel
 $salonEditar = null;
 $servicioEditar = null;
 $personalEditar = null;
@@ -234,7 +243,7 @@ $personalList = [];
 $listadoReservas = [];
 
 if ($esAdmin) {
-    // Ediciones
+    // Carga datos previos si se solicitó editar un salón, servicio o miembro del personal
     if (isset($_GET['editar'])) {
         $stmtEdit = $pdo->prepare("SELECT * FROM salon WHERE id_salon = ?");
         $stmtEdit->execute([intval($_GET['editar'])]);
@@ -253,12 +262,12 @@ if ($esAdmin) {
         $personalEditar = $stmtEditP->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Listas
+    // Consulta las listas de salones, servicios y personal para mostrar en las tablas
     $salones = $pdo->query("SELECT * FROM salon")->fetchAll(PDO::FETCH_ASSOC);
     $servicios = $pdo->query("SELECT * FROM servicio")->fetchAll(PDO::FETCH_ASSOC);
     $personalList = $pdo->query("SELECT * FROM personal")->fetchAll(PDO::FETCH_ASSOC);
 
-    // Obtener listado completo de reservas con datos relacionados
+    // Consulta las reservas combinando datos de salón, cliente y pago ordenadas de más reciente a más antigua
     $listadoReservas = $pdo->query("SELECT r.*, s.nombre as salon_nombre, c.nombre as cliente_nombre, c.telefono, p.metodo_pago, p.estado as estado_pago 
                                     FROM reserva r 
                                     JOIN salon s ON r.id_salon = s.id_salon 
@@ -269,6 +278,7 @@ if ($esAdmin) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+<!-- Cabecera HTML: título, estilos de Bulma, iconos de FontAwesome y hoja de estilos propia -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -279,7 +289,7 @@ if ($esAdmin) {
 </head>
 <body class="has-background-light">
 
-  <!-- NAVBAR DE ADMINISTRACIÓN -->
+  <!-- NAVBAR DE ADMINISTRACIÓN: navegación superior, enlace al sitio público y cierre de sesión -->
   <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand">
@@ -299,6 +309,7 @@ if ($esAdmin) {
   </nav>
 
   <?php if (!$esAdmin): ?>
+    <!-- Pantalla de acceso restringido: se muestra cuando no hay sesión activa de Administrador -->
     <section class="section">
       <div class="container" style="max-width: 440px;">
         <div class="box p-5">
@@ -309,6 +320,7 @@ if ($esAdmin) {
             <div class="notification is-danger is-light"><?php echo htmlspecialchars($errorLogin, ENT_QUOTES, 'UTF-8'); ?></div>
           <?php endif; ?>
 
+          <!-- Formulario de login del administrador -->
           <form method="POST" action="admin.php">
             <div class="field">
               <label class="label">Correo electrónico</label>
@@ -336,7 +348,7 @@ if ($esAdmin) {
       </div>
     </section>
   <?php else: ?>
-    <!-- CONTENIDO PRINCIPAL -->
+    <!-- CONTENIDO PRINCIPAL: visible únicamente para administradores autenticados -->
     <section class="section">
       <div class="container">
         <h1 class="title is-3 has-text-centered mb-5">Gestión y ABM del Sistema</h1> 
@@ -345,7 +357,7 @@ if ($esAdmin) {
           <div class="notification is-success is-light"><?php echo htmlspecialchars($mensaje, ENT_QUOTES, 'UTF-8'); ?></div>
         <?php endif; ?>
 
-        <!-- PESTAÑAS DE NAVEGACIÓN -->
+        <!-- PESTAÑAS DE NAVEGACIÓN: alterna entre Salones, Servicios, Personal y Solicitudes de Reserva -->
         <div class="tabs is-boxed is-centered" id="admin-tabs">
           <ul>
             <li class="<?php echo ($servicioEditar || $personalEditar) ? '' : 'is-active'; ?>" data-target="abm-salones"><a><i class="fas fa-door-open mr-2"></i> Salones</a></li>
@@ -355,7 +367,7 @@ if ($esAdmin) {
           </ul>
         </div>
 
-        <!-- SECCIÓN 1: ABM SALONES -->
+        <!-- SECCIÓN 1: ABM SALONES (formulario de alta/edición y tabla de salones) -->
         <div id="abm-salones" class="abm-content box <?php echo ($servicioEditar || $personalEditar) ? 'is-hidden' : ''; ?>">
           <h2 class="title is-4 has-text-warning-dark">Administrar Salones</h2> <br>
           <p class="subtitle is-6">Control de altas, modificaciones y bajas de espacios.</p>
@@ -449,7 +461,7 @@ if ($esAdmin) {
           </div>
         </div>
 
-        <!-- SECCIÓN 2: ABM SERVICIOS -->
+        <!-- SECCIÓN 2: ABM SERVICIOS (formulario de alta/edición y tabla de servicios adicionales) -->
         <div id="abm-servicios" class="abm-content box <?php echo $servicioEditar ? '' : 'is-hidden'; ?>">
           <h2 class="title is-4 has-text-warning-dark">Administrar Servicios Adicionales</h2> <br>
           <p class="subtitle is-6">Controlá los precios y detalles de catering, DJ, decoración y más.</p>
@@ -541,7 +553,7 @@ if ($esAdmin) {
           </div>
         </div>
 
-        <!-- SECCIÓN 3: ABM PERSONAL -->
+        <!-- SECCIÓN 3: ABM PERSONAL (formulario de alta/edición y tabla de personal) -->
         <div id="abm-personal" class="abm-content box <?php echo $personalEditar ? '' : 'is-hidden'; ?>">
           <h2 class="title is-4 has-text-warning-dark">Administrar Personal</h2> <br>
           <p class="subtitle is-6">Gestioná los empleados, mozos, técnicos y coordinadores del salón.</p>
@@ -647,7 +659,7 @@ if ($esAdmin) {
           </div>
         </div>
 
-        <!-- SECCIÓN 4: GESTIÓN DE RESERVAS (ADMINISTRADOR) -->
+        <!-- SECCIÓN 4: GESTIÓN DE RESERVAS (listado de solicitudes y botones para aprobar o rechazar) -->
         <div id="abm-reservas" class="abm-content box is-hidden">
           <h2 class="title is-4 has-text-warning-dark">Notificaciones de Solicitudes de Reserva</h2><br>
           <p class="subtitle is-6">Revisá las peticiones de los clientes, qué salón solicitaron, cuándo y tomá acción.</p>
@@ -709,7 +721,7 @@ if ($esAdmin) {
       </div>
     </section>
 
-    <!-- SCRIPT PARA CAMBIAR ENTRE PESTAÑAS -->
+    <!-- SCRIPT PARA CAMBIAR ENTRE PESTAÑAS: muestra el bloque correspondiente al hacer clic en cada tab -->
     <script>
       document.querySelectorAll('#admin-tabs li').forEach(tab => {
         tab.addEventListener('click', function() {
