@@ -264,6 +264,13 @@ function enviarReservaConMetodo(event, idSalon, metodoPago) {
     return;
   }
 
+  // Bloquea el envío si la fecha elegida es el día actual o anterior (se exige al menos 1 día de anticipación)
+  const hoyStr = new Date().toISOString().split('T')[0];
+  if (fechaEvento <= hoyStr) {
+    alert("No se permiten reservas para el mismo día ni para fechas pasadas. Seleccioná una fecha a partir de mañana.");
+    return;
+  }
+
   // RECUPERAR EL EMAIL Y NOMBRE DEL USUARIO LOGUEADO DESDE LOCALSTORAGE
   const sesionGuardada = localStorage.getItem('sesion_usuario');
   let emailCliente = "cliente@evaluacion.com"; // Resguardo por defecto si no hay sesión
@@ -437,9 +444,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Impide seleccionar fechas anteriores al día actual en el campo de fecha del evento
+  // Impide seleccionar el día actual ni fechas pasadas en el campo de fecha del evento (mínimo: mañana)
   const inputFecha = document.getElementById('fecha-evento');
   if (inputFecha) {
-    inputFecha.min = new Date().toISOString().split('T')[0];
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    inputFecha.min = manana.toISOString().split('T')[0];
   }
 });
